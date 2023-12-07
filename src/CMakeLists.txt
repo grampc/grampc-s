@@ -1,0 +1,6 @@
+add_subdirectory(constraint_approx)
+add_subdirectory(distribution)
+add_subdirectory(point_transformation)
+add_subdirectory(polynomial)
+add_subdirectory(problem_description)
+add_subdirectory(util)

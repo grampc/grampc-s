@@ -1,0 +1,4 @@
+target_sources(grampc-s PRIVATE 
+	chebyshev_constraint_approximation.cpp
+	Gaussian_constraint_approximation.cpp
+	symmetric_constraint_approximation.cpp)

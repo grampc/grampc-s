@@ -1,0 +1,14 @@
+target_sources(grampc-s PRIVATE 
+	distribution.cpp
+	univariate_uniform_distribution.cpp
+	univariate_piecewise_constant_distribution.cpp
+	multivariate_uncorrelated_distribution.cpp
+	Gaussian_distribution.cpp
+	univariate_gamma_distribution.cpp
+	univariate_lognormal_distribution.cpp
+	univariate_student-t_distribution.cpp
+	univariate_weibull_distribution.cpp
+	univariate_exponential_distribution.cpp
+	univariate_extreme_value_distribution.cpp
+	univariate_chi_squared_distribution.cpp
+	univariate_f_distribution.cpp)

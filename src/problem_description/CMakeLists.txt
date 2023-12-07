@@ -1,0 +1,6 @@
+target_sources(grampc-s PRIVATE 
+	grampc_interface.cpp
+	monte_carlo_problem_description.cpp
+	sigma_point_problem_description.cpp
+	stochastic_problem_description.cpp
+	taylor_problem_description.cpp)
