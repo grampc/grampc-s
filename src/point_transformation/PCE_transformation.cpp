@@ -2,31 +2,29 @@
 
 namespace grampc
 {
-    PCE_Transformation::PCE_Transformation(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
-    : dim_(polyFamily.size()),
+    PCE_Transformation::PCE_Transformation(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
+    : dimX_(dimX),
+      dimY_(dimY),
       dimUncertain_((quadratureOrder.array() > 1).count()),
       numPoints_(quadratureOrder.prod()),
       maxPolyOrder_(maxPolyOrder),
       numPolynomials_(factorial(dimUncertain_ + maxPolyOrder_) / factorial(dimUncertain_) / factorial(maxPolyOrder_)),
-      normalizedPoints_(dim_, numPoints_),
-      points_(dim_, numPoints_),
-      PCE_coefficients_mean_(dim_),
-      PCE_coefficients_cov_(dim_, numPolynomials_ - 1),
+      normalizedPoints_(dimX_, numPoints_),
+      points_(dimX_, numPoints_),
+      PCE_coefficients_mean_(dimY_),
+      PCE_coefficientsX_(dimX_, numPolynomials_ - 1),
+      PCE_coefficientsY_(dimY_, numPolynomials_ - 1),
       PCE_coefficients_var_(numPolynomials_-1),
       squaredNorms_(numPolynomials_),
       squaredNorms_Var_(numPolynomials_-1),
       temp_squaredNorms_Var_(numPolynomials_-1),
-      covariance_(dim_, dim_),
+      covariance_(dimX_, dimY_),
       weightsCov_(numPoints_, numPolynomials_-1),
       weightsMean_(numPoints_),
-      dmean_dpoints_vec_(dim_ * numPoints_),
-      dcov_dpoints_vec_(dim_ * numPoints_),
-      dvar_dpoints_vec_(numPoints_),
-      dcoeff_dpoints(Matrix::Zero(dim_ * numPoints_, numPolynomials_ - 1)),
-      dcoeff_dpoints2(Matrix::Zero(dim_ * numPoints_, numPolynomials_ - 1))
+      dvar_dpoints_vec_(numPoints_)
     {
         // Quadrature points
-        ComposedQuadrature quad = ComposedQuadrature(polyFamily, quadratureOrder);
+        ComposedQuadrature quad = ComposedQuadrature(dimX, dimY, polyFamily, quadratureOrder);
         normalizedPoints_ = quad.normalizedPoints();
 
         // Construct a map from polynomial families to generators for the corresponding orthogonal polynomials
@@ -65,13 +63,13 @@ namespace grampc
         }
 
         // Extend multiindex by inserting non-uncertain variables
-        Eigen::Matrix<typeInt, -1, -1> multiIndex(numPolynomials_, dim_);
-        if(dim_ == dimUncertain_)
+        Eigen::Matrix<typeInt, -1, -1> multiIndex(numPolynomials_, dimX_);
+        if(dimX_ == dimUncertain_)
         {
             multiIndex = std::move(multiIndexUncertain);
         }else{
             typeInt uncertainVarCounter = 0;
-            for(typeInt i = 0; i < dim_; ++i)
+            for(typeInt i = 0; i < dimX_; ++i)
             {
                 if(quadratureOrder(i) > 1)
                 {
@@ -84,14 +82,14 @@ namespace grampc
         }
         
         // Vector of univariate and multivariate polynomials
-        std::vector<PolynomialConstPtr> uniPolyVec(dim_);
-        std::vector<typeRNum> squaredNorms(dim_);
+        std::vector<PolynomialConstPtr> uniPolyVec(dimX_);
+        std::vector<typeRNum> squaredNorms(dimX_);
         std::vector<MultivariatePolynomialPtr> multPolyVec(numPolynomials_);        
 
         // Construct multivariate polynomials as products of the univariate polynomilas
         for(typeInt i = 0; i < numPolynomials_; ++i)
         {
-            for(typeInt j = 0; j < dim_; ++j)
+            for(typeInt j = 0; j < dimX_; ++j)
             {
                 uniPolyVec[j] = polynomialMap[polyFamily[j]]->getPolynomial(multiIndex(i, j));
                 squaredNorms[j] = polynomialMap[polyFamily[j]]->getSquaredNorm(multiIndex(i, j));
@@ -119,24 +117,31 @@ namespace grampc
         }
     }
 
-    PCE_Transformation::PCE_Transformation(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const std::vector<typeInt>& quadratureOrder)
-    : PCE_Transformation(polyFamily, maxPolyOrder, Eigen::Map<const Eigen::Vector<typeInt, Eigen::Dynamic>>(quadratureOrder.data(), polyFamily.size()))
+    PCE_Transformation::PCE_Transformation(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const std::vector<typeInt>& quadratureOrder)
+    : PCE_Transformation(dimX, dimY, polyFamily, maxPolyOrder, Eigen::Map<const Eigen::Vector<typeInt, Eigen::Dynamic>>(quadratureOrder.data(), polyFamily.size()))
     {
     }
 
-    PCE_Transformation::PCE_Transformation(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, typeInt quadratureOrder)
-    : PCE_Transformation(polyFamily, maxPolyOrder, Eigen::Vector<typeInt, Eigen::Dynamic>::Constant(polyFamily.size(), quadratureOrder))
+    PCE_Transformation::PCE_Transformation(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, typeInt quadratureOrder)
+    : PCE_Transformation(dimX, dimY, polyFamily, maxPolyOrder, Eigen::Vector<typeInt, Eigen::Dynamic>::Constant(polyFamily.size(), quadratureOrder))
     {
     }
 
     const Matrix& PCE_Transformation::points(DistributionConstPtr dist)
     {
         const Matrix& chol = dist->covCholesky();
+
         for(typeInt i = 0; i < numPoints_; ++i)
         {
             points_.col(i) = dist->mean();
             points_.col(i).noalias() += chol * normalizedPoints_.col(i);
         }
+
+        return points_;
+    }
+
+    const Matrix& PCE_Transformation::points()
+    {
         return points_;
     }
 
@@ -151,24 +156,18 @@ namespace grampc
         return points * weightsMean_;
     }
 
-    const Matrix& PCE_Transformation::covariance(MatrixConstRef points)
+    const Matrix& PCE_Transformation::covariance(MatrixConstRef pointsX, MatrixConstRef pointsY)
     {
         // Compute the polynomial coefficients
-        PCE_coefficients_cov_.noalias() = points * weightsCov_;
+        PCE_coefficientsX_.noalias() = pointsX * weightsCov_;
+        PCE_coefficientsY_.noalias() = pointsY * weightsCov_;
 
-        // diagonal elements of the covariance matrix
-        for(typeInt i = 0; i < dim_; ++i)
+        // cross-covariance between x and y
+        for(typeInt i = 0; i < dimX_; ++i)
         {
-            covariance_(i, i) = (PCE_coefficients_cov_.row(i).cwiseProduct(PCE_coefficients_cov_.row(i))  * squaredNorms_Var_).value();
-        }
-
-        // non-diagonal elementso of the covariance matrix
-        for(typeInt i = 0; i < dim_ -1; ++i)
-        {
-            for(typeInt j = i+1; j < dim_; ++j)
+            for(typeInt j = 0; j < dimY_; ++j)
             {
-                covariance_(i, j) = (PCE_coefficients_cov_.row(i).cwiseProduct(PCE_coefficients_cov_.row(j))  * squaredNorms_Var_).value();
-                covariance_(j, i) = covariance_(i, j);
+                covariance_(i, j) = (PCE_coefficientsX_.row(i).cwiseProduct(PCE_coefficientsY_.row(j))  * squaredNorms_Var_).value();
             }
         }
         return covariance_;
@@ -179,57 +178,13 @@ namespace grampc
         // Compute the polynomial coefficients
         PCE_coefficients_var_.noalias() = points * weightsCov_;
         PCE_coefficients_var_ = PCE_coefficients_var_.cwiseAbs2();
+        
         return PCE_coefficients_var_ * squaredNorms_Var_;
-    }
-
-    const Vector& PCE_Transformation::dmean_dpoints_vec(VectorConstRef vec)
-    {
-        // out = (w_1*v_1  w_1*v_2  w_1*v_3  ...  w_2*v_1  w_2*v_2   w_2*v_3  ...)^T
-
-        // Set and return output
-        for(typeInt i = 0; i < numPoints_; ++i)
-        {
-            dmean_dpoints_vec_.segment(i * dim_, dim_) = weightsMean_(i) * vec;
-        }
-        return dmean_dpoints_vec_;
     }
 
     const Vector& PCE_Transformation::dmean1D_dpoints()
     {
         return weightsMean_;
-    }
-
-    const Vector& PCE_Transformation::dcov_dpoints_vec(MatrixConstRef points, VectorConstRef vec)
-    {
-        // initialize output  
-        dcov_dpoints_vec_.setZero();
-
-        // Mapping of the vec input to a matrix corresponding to the covariance matrix
-        Eigen::Map<const Matrix> vecMatrix(vec.data(), dim_, dim_);
-
-        // Compute the polynomial coefficients
-        PCE_coefficients_cov_ = points * weightsCov_;
-        
-        // Compute derivative
-        for(typeInt i = 0; i < dim_; ++i)
-        {
-            // diagonal elements
-            dcoeff_dpoints(Eigen::seqN(i, numPoints_, dim_) , Eigen::all) = weightsCov_;
-            dcov_dpoints_vec_.noalias() += 2 * dcoeff_dpoints * squaredNorms_Var_.cwiseProduct(PCE_coefficients_cov_.row(i).transpose()) * vecMatrix(i, i);
-
-            // non-diagonal elements
-            for(typeInt j = i+1; j < dim_; ++j)
-            {
-                dcoeff_dpoints2(Eigen::seqN(j, numPoints_, dim_) , Eigen::all) = weightsCov_;
-
-                dcov_dpoints_vec_.noalias() += (dcoeff_dpoints2 * squaredNorms_.segment(1, numPolynomials_-1).cwiseProduct(PCE_coefficients_cov_.row(i).transpose()) +
-                                                dcoeff_dpoints * squaredNorms_.segment(1, numPolynomials_-1).cwiseProduct(PCE_coefficients_cov_.row(j).transpose())) * 
-                                               (vecMatrix(j, i) + vecMatrix(i, j));
-                dcoeff_dpoints2(Eigen::seqN(j, numPoints_, dim_) , Eigen::all).setZero();
-            }
-            dcoeff_dpoints(Eigen::seqN(i, numPoints_, dim_) , Eigen::all).setZero();
-        }
-        return dcov_dpoints_vec_;
     }
 
     const Vector& PCE_Transformation::dvar_dpoints(RowVectorConstRef points)
@@ -249,18 +204,18 @@ namespace grampc
         return numPoints_;
     }
 
-    PointTransformationPtr PCE(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
+    PointTransformationPtr PCE(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
     {
-        return PointTransformationPtr(new PCE_Transformation(polyFamily, maxPolyOrder, quadratureOrder));
+        return PointTransformationPtr(new PCE_Transformation(dimX, dimY, polyFamily, maxPolyOrder, quadratureOrder));
     }
 
-    PointTransformationPtr PCE(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const std::vector<typeInt>& quadratureOrder)
+    PointTransformationPtr PCE(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const std::vector<typeInt>& quadratureOrder)
     {
-        return PointTransformationPtr(new PCE_Transformation(polyFamily, maxPolyOrder, quadratureOrder));
+        return PointTransformationPtr(new PCE_Transformation(dimX, dimY, polyFamily, maxPolyOrder, quadratureOrder));
     }
 
-    PointTransformationPtr PCE(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, typeInt quadratureOrder)
+    PointTransformationPtr PCE(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, typeInt quadratureOrder)
     {
-        return PointTransformationPtr(new PCE_Transformation(polyFamily, maxPolyOrder, quadratureOrder));
+        return PointTransformationPtr(new PCE_Transformation(dimX, dimY, polyFamily, maxPolyOrder, quadratureOrder));
     }
 }

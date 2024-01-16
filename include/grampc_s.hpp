@@ -9,6 +9,7 @@
 #include "problem_description/sigma_point_problem_description.hpp"
 #include "problem_description/taylor_problem_description.hpp"
 #include "problem_description/monte_carlo_problem_description.hpp"
+#include "problem_description/resampling_problem_description.hpp"
 
 // include distributions
 #include "distribution/distribution.hpp"
@@ -24,23 +25,22 @@
 #include "distribution/univariate_weibull_distribution.hpp"
 #include "distribution/univariate_extreme_value_distribution.hpp"
 #include "distribution/univariate_f_distribution.hpp"
+#include "distribution/univariate_beta_distribution.hpp"
 
-
+// incluede polynomials
 #include "polynomial/polynomial.hpp"
 #include "polynomial/multivariate_polynomial.hpp"
 #include "polynomial/orthogonal_polynomial_generator.hpp"
 #include "polynomial/Hermite_polynomial_generator.hpp"
 #include "polynomial/Legendre_polynomial_generator.hpp"
 
-#include "point_transformation/point_transformation.hpp"
-
-
 // inlcude point generators
+#include "point_transformation/point_transformation.hpp"
 #include "point_transformation/monte_carlo.hpp"
 #include "point_transformation/unscented_transformation.hpp"
 #include "point_transformation/stirling_interpolation_first_order.hpp"
 #include "point_transformation/stirling_interpolation_second_order.hpp"
-#include "point_transformation/quadrature_rules/Legendre_quadrature.hpp"
+ #include "point_transformation/quadrature_rules/Legendre_quadrature.hpp"
 #include "point_transformation/quadrature_rules/Hermite_quadrature.hpp"
 #include "point_transformation/composed_quadrature.hpp"
 #include "point_transformation/PCE_transformation.hpp"

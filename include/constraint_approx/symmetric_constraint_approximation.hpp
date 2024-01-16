@@ -27,7 +27,7 @@ namespace grampc
         Vector coefficients_;
     };
 
-    ;
+    ChanceConstraintApproximationPtr Symmetric(const Vector& probabilities);
 }
 
 

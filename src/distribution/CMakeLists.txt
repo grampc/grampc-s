@@ -11,4 +11,5 @@ target_sources(grampc-s PRIVATE
 	univariate_exponential_distribution.cpp
 	univariate_extreme_value_distribution.cpp
 	univariate_chi_squared_distribution.cpp
-	univariate_f_distribution.cpp)
+	univariate_f_distribution.cpp
+	univariate_beta_distribution.cpp)

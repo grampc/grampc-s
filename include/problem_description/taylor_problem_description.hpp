@@ -15,6 +15,9 @@ namespace grampc
     public:
         // Constructor specifying the type of constraint approximation
         TaylorProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation);
+
+        // Constructor with zero-mean Wiener process and specified covariance matrix
+        TaylorProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation, MatrixConstRef covWienerProcess);
         
         /** OCP dimensions: states (Nx), controls (Nu), parameters (Np), equalities (Ng), 
 			inequalities (Nh), terminal equalities (NgT), terminal inequalities (NhT) **/
@@ -50,6 +53,9 @@ namespace grampc
         // Gradient dV/dx
         virtual void dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes) override;
 
+        /** Gradient dV/dT **/
+		virtual void dVdT(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes) override;
+
 
         /** Inequality constraints h(t,x,u,p) < 0
 		-------------------------------------------------- **/
@@ -60,6 +66,17 @@ namespace grampc
 
         // Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dh/du)
         virtual void dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec) override;
+
+
+        /** Terminal inequality constraints hT(T,x,p) < 0 
+         * ------------------------------------------------ **/
+        virtual void hTfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p) override;
+
+		/** Jacobian dhT/dx multiplied by vector vec, i.e. (dhT/dx)^T*vec or vec^T*(dhT/dx) **/
+		virtual void dhTdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec) override;
+        
+		/** Jacobian dhT/dT multiplied by vector vec, i.e. (dhT/dT)^T*vec or vec^T*(dhT/dT) **/
+		virtual void dhTdT_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec) override;
 
 
         // Compute the point-based representation of the initial states and the parameters
@@ -79,9 +96,11 @@ namespace grampc
         typeInt numParams_;
         typeInt numControlInputs_;
         typeInt numConstraints_;
+        typeInt numTerminalConstraints_;
         
         StochasticProblemDescriptionPtr problemDescription_;
         Vector constraintTighteningCoeff_;
+        Matrix covWienerProcess_;
         Matrix x0_;
         Matrix p0_;
         Matrix dfdx_;
@@ -95,6 +114,11 @@ namespace grampc
         Matrix dhdxdx_;
         Matrix dhdxdu_;
         Vector constraintStdDev_;
+        Matrix dhTdx_;
+        Vector dhTdvar_;
+        Matrix dhTdxdx_;
+        Matrix dhTdxdT_;
+        Vector terminalConstraintStdDev_;
 
         // Temporary elements
         typeRNum temp_scalar_;

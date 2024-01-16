@@ -43,41 +43,6 @@
         virtual void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec) override;
         virtual void dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec) override;
         virtual void dhdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec) override;
-
-
-        /** Additional functions required for Taylor-SMPC */
-
-        /** Jacobian df/dx in vector form (column-wise) **/
-        virtual void dfdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-        /** Jacobian df/dp in vector form (column-wise) **/
-        virtual void dfdp(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-        /** Hessian d(df/dx)/dx in vector form (column-wise) */
-        virtual void dfdxdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-        /** Jacobian d(df/dx)/dp in vector form (column-wise) */
-        virtual void dfdxdp(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-        /** Hessian d(df/dx)/du in vector form (column-wise) */
-        virtual void dfdxdu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-        /** Jacobian d(df/dp)/du in vector form (column-wise) */
-        virtual void dfdpdu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-
-        /** Jacobian dh/dx in vector form (column-wise) **/
-        virtual void dhdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-        /** Jacobian dh/du in vector form (column-wise) **/
-        virtual void dhdu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-
-        /** Hessian d(dh/dx)/dx in vector form (column-wise) **/
-        virtual void dhdxdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
-
-        /** Jacobian d(dh/dx)/du in vector form (column-wise) **/
-        virtual void dhdxdu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) override;
         
     private:
         // system parameters

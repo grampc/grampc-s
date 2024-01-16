@@ -36,6 +36,9 @@ namespace grampc
         // Sample a random numbers of the distribution using the specified random number generator
         virtual const Vector& sample(RandomNumberGenerator& rng) const;
 
+        // Replace the mean and the covariance of this distribution
+        void replaceMeanAndCovariance(VectorConstRef mean, MatrixConstRef covariance);
+
         // Get the diminsion of the distribution
         typeInt dimension() const;
 
@@ -57,8 +60,9 @@ namespace grampc
     typedef std::shared_ptr<Distribution> DistributionPtr;
     typedef std::shared_ptr<const Distribution> DistributionConstPtr;
 
-    // Abstract distribution
     DistributionPtr Dist(typeInt dim);
+    DistributionPtr Dist(VectorConstRef mean, MatrixConstRef covariance, const std::vector<PolynomialFamily>& poly);
+    DistributionPtr Dist(VectorConstRef mean, MatrixConstRef covariance, MatrixConstRef covChol,  const std::vector<PolynomialFamily>& poly);
 
     // Return the sum of dimensions of all elements of the distribution vector
     typeInt numberOfDimensions(const std::vector<DistributionPtr>& distributions);

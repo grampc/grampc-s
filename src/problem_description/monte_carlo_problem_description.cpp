@@ -3,16 +3,15 @@
 namespace grampc
 {
 
-    MonteCarloProblemDescription::MonteCarloProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,
-                                 PointTransformationPtr pointTransformation)
+    MonteCarloProblemDescription::MonteCarloProblemDescription(StochasticProblemDescriptionPtr problemDescription, PointTransformationPtr pointTransformation)
         : numSigmaPoints_(pointTransformation->numberOfPoints()),
           problemDescription_(problemDescription),
           pointTransformation_(pointTransformation)
-        {
-        typeInt Ng, NgT, NhT;
+    {
+        typeInt Ng, NgT;
 
         // Call ocp_dim to get the number of states, controls, parameters, and constraints
-        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, &Ng, &numConstraints_, &NgT, &NhT);
+        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, &Ng, &numConstraints_, &NgT, &numTerminalConstraints_);
 
         // Distribution of states and parameters
         stateAndParam_ = MultiDist({Dist(numStates_), Dist(numParams_)});
@@ -27,11 +26,12 @@ namespace grampc
 
     void MonteCarloProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
     {
-        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, Ng, &numConstraints_, NgT, NhT);
+        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, Ng, &numConstraints_, NgT, &numTerminalConstraints_);
         *Nx = numSigmaPoints_ * numStates_;
         *Np = numSigmaPoints_ * numParams_;
         *Nu = numControlInputs_;
         *Nh = numConstraints_ * numSigmaPoints_;
+        *NhT = numTerminalConstraints_ * numSigmaPoints_;
     }
 
     void MonteCarloProblemDescription::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
@@ -137,9 +137,23 @@ namespace grampc
         }
     }
 
+    void MonteCarloProblemDescription::dVdT(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    {
+        // dVdT of the first sigma point
+        problemDescription_->dVdT(out, t, x, p, xdes);
+        out[0] *= dmean_dPoints_(0);
+        
+        // Add dVdT of the remaining sigma points
+        for (int i = 1; i < numSigmaPoints_; ++i)
+        {
+            problemDescription_->dVdT(&tempScalar_, t, x + i * numStates_, p + i * numParams_, xdes);
+            out[0] += tempScalar_ * dmean_dPoints_(i);
+        }
+    }
+
     void MonteCarloProblemDescription::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
     {
-        // h of all samples
+        // Inequality constraint of all samples
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
         {
             problemDescription_->hfct(out + i * numConstraints_, t, x + i * numStates_, u, p + i * numParams_);
@@ -169,15 +183,51 @@ namespace grampc
         }
     }
 
+    void MonteCarloProblemDescription::hTfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p)
+    {
+        // Terminal inequality constraint of all samples
+        for (typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            problemDescription_->hTfct(out + i * numTerminalConstraints_, t, x + i * numStates_, p + i * numParams_);
+        }
+    }
+
+    void MonteCarloProblemDescription::dhTdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec)
+    {
+        // dhTdx of all samples
+        for (int i = 0; i < numSigmaPoints_; ++i)
+        {
+            problemDescription_->dhTdx_vec(out + i * numStates_, t, x + i * numStates_, p + i * numParams_, vec + i * numTerminalConstraints_);
+        }
+    }
+
+    void MonteCarloProblemDescription::dhTdT_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec)
+    {
+        out[0] = 0.0;
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            /// Derivative of the constraint
+            problemDescription_->dhTdT_vec(&tempScalar_, t, x + i * numStates_, p + i * numParams_, vec + i * numTerminalConstraints_);
+            out[0] += tempScalar_;
+        }
+    }
+
     void MonteCarloProblemDescription::compute_x0_and_p0(DistributionPtr state, DistributionPtr param)
     {
         // Set combined distribution
         stateAndParam_->replaceDistribution(0, state);
+        stateAndParam_->replaceDistribution(1, param);
 
-        if(param != stateAndParam_->getDistribution(1))
-        {
-            stateAndParam_->replaceDistribution(1, param);
-        }
+        // Compute state and parameter points and copy them to matrices of the correct size
+        const Matrix& points = pointTransformation_->points(stateAndParam_);
+        x0_ = points.topRows(numStates_);
+        p0_ = points.bottomRows(numParams_);
+    }
+
+    void MonteCarloProblemDescription::compute_x0_and_p0(DistributionPtr state)
+    {
+        // Set state distribution
+        stateAndParam_->replaceDistribution(0, state);
 
         // Compute state and parameter points and copy them to matrices of the correct size
         const Matrix& points = pointTransformation_->points(stateAndParam_);

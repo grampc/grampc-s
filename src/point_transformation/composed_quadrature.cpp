@@ -2,24 +2,21 @@
 
 namespace grampc
 {
-    ComposedQuadrature::ComposedQuadrature(const std::vector<PolynomialFamily>& polyFamily, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
-      : dim_(polyFamily.size()),
+    ComposedQuadrature::ComposedQuadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
+      : dimX_(dimX),
+        dimY_(dimY),
         numPoints_(quadratureOrder.prod()),
-        normalizedPoints_(dim_, numPoints_),
-        points_(dim_, numPoints_),
-        roots_(dim_, numPoints_),
-        mean_(dim_),
-        covariance_(dim_, dim_),
-        covariance_temp_(dim_, dim_),
+        normalizedPoints_(dimX_, numPoints_),
+        points_(dimX_, numPoints_),
+        roots_(dimX_, numPoints_),
+        meanX_(dimX_),
+        meanY_(dimY_),
+        covariance_(dimX_, dimY_),
         weights_(Vector::Ones(numPoints_)),
-        dmean_dpoints_vec_(dim_ * numPoints_),
-        dcov_dpoints_vec_(dim_ * numPoints_),
         dvar_dpoints_(numPoints_),
-        diffToMean_(dim_, numPoints_),
-        diffToMean1D_(numPoints_),
-        dcov_(dim_, numPoints_),
-        diffToMean_jk_dx_(Matrix::Zero(dim_, numPoints_)),
-        diffToMean_ik_dx_(Matrix::Zero(dim_, numPoints_))
+        diffToMeanX_(dimX_, numPoints_),
+        diffToMeanY_(dimY_, numPoints_),
+        diffToMean1D_(numPoints_)
     {   
         // Check inputs 
         if(polyFamily.size() != quadratureOrder.size())
@@ -28,8 +25,8 @@ namespace grampc
         }
 
         // Get corresponding quadrature rules
-        std::vector<QuadratureRuleConstPtr> quadRules(dim_);
-        for(typeInt i = 0; i < dim_; ++i)
+        std::vector<QuadratureRuleConstPtr> quadRules(dimX_);
+        for(typeInt i = 0; i < dimX_; ++i)
         {
             quadRules[i] = correspondingQuadratureRule(polyFamily[i], quadratureOrder[i]);
         }
@@ -39,15 +36,14 @@ namespace grampc
          ************************************************************************************/
         typeInt index;
 
-        // Dimension and vector of quadrature points numbers for the univariate quadrature rules
-        typeInt dim = quadRules.size();
-        std::vector<typeInt> numUnivariateQuadPoints(dim);
+        // Vector of quadrature points numbers for the univariate quadrature rules
+        std::vector<typeInt> numUnivariateQuadPoints(dimX);
 
         // Number of quadrature points for the multivariate quadrature
         typeInt numOutputPoints = 1;
 
         // Compute vector of quadrature points numbers and number of output points
-        for(typeInt i = 0; i < dim; ++i)
+        for(typeInt i = 0; i < dimX; ++i)
         {
             numUnivariateQuadPoints[i] = quadRules[i]->numberOfPoints();
             numOutputPoints *= numUnivariateQuadPoints[i] ;
@@ -57,7 +53,7 @@ namespace grampc
         typeInt numComb = numOutputPoints;
 
         // Compute roots and normalized quadrature points
-        for(typeInt i = 0; i < dim; ++i)
+        for(typeInt i = 0; i < dimX; ++i)
         {
             // Get points and weights of the current quadrature rule
             const Vector& roots = quadRules[i]->polynomialRoots();
@@ -76,13 +72,13 @@ namespace grampc
         }
     }
 
-    ComposedQuadrature::ComposedQuadrature(const std::vector<PolynomialFamily>& polyFamily, const std::vector<typeInt>& quadratureOrder)
-    : ComposedQuadrature(polyFamily, Eigen::Map<const Eigen::Vector<typeInt, Eigen::Dynamic>>(quadratureOrder.data(), polyFamily.size()))
+    ComposedQuadrature::ComposedQuadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, const std::vector<typeInt>& quadratureOrder)
+    : ComposedQuadrature(dimX, dimY, polyFamily, Eigen::Map<const Eigen::Vector<typeInt, Eigen::Dynamic>>(quadratureOrder.data(), polyFamily.size()))
     {
     }
 
-    ComposedQuadrature::ComposedQuadrature(const std::vector<PolynomialFamily>& polyFamily, typeInt quadratureOrder)
-    : ComposedQuadrature(polyFamily, Eigen::Vector<typeInt, Eigen::Dynamic>::Constant(polyFamily.size(), quadratureOrder))
+    ComposedQuadrature::ComposedQuadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt quadratureOrder)
+    : ComposedQuadrature(dimX, dimY, polyFamily, Eigen::Vector<typeInt, Eigen::Dynamic>::Constant(polyFamily.size(), quadratureOrder))
     {
     }
 
@@ -94,13 +90,30 @@ namespace grampc
             points_.col(i) = dist->mean();
             points_.col(i).noalias() += chol * normalizedPoints_.col(i);
         }
+
+        return points_;
+    }
+
+    const Matrix& ComposedQuadrature::points(VectorConstRef mean, MatrixConstRef covCholesky)
+    {
+        for(typeInt i = 0; i < numPoints_; ++i)
+        {
+            points_.col(i) = mean;
+            points_.col(i).noalias() += covCholesky * normalizedPoints_.col(i);
+        }
+
+        return points_;
+    }
+
+    const Matrix& ComposedQuadrature::points()
+    {
         return points_;
     }
 
     const Vector& ComposedQuadrature::mean(MatrixConstRef points)
     {
-        mean_.noalias() = points * weights_;
-        return mean_;
+        meanY_.noalias() = points * weights_;
+        return meanY_;
     }
 
     typeRNum ComposedQuadrature::mean1D(RowVectorConstRef points)
@@ -108,16 +121,21 @@ namespace grampc
         return points * weights_;
     }
 
-    const Matrix& ComposedQuadrature::covariance(MatrixConstRef points)
+    const Matrix& ComposedQuadrature::covariance(MatrixConstRef pointsX, MatrixConstRef pointsY)
     {
-        // Compute the mean
-        mean_.noalias() = points * weights_;
+        // Compute mean of points
+        meanX_.noalias() = pointsX * weights_;
+        meanY_.noalias() = pointsY * weights_;
 
-        // Difference between points and mean
-        diffToMean_ = points.colwise() - mean_;
+        // difference between points and mean
+        for(typeInt i = 0; i < numPoints_; ++i)
+        {
+            diffToMeanX_.col(i) = (pointsX.col(i) - meanX_) * weights_(i);
+            diffToMeanY_.col(i) = pointsY.col(i) - meanY_;
+        }
 
         // Compute and return the covariance matrix
-        covariance_.noalias() = diffToMean_ * weights_.asDiagonal() * diffToMean_.transpose();
+        covariance_.noalias() = diffToMeanX_ * diffToMeanY_.transpose();
         return covariance_;
     }
 
@@ -131,80 +149,9 @@ namespace grampc
         return diffToMean1D_ * diffToMean1D_.transpose().cwiseProduct(weights_);
     }
 
-    const Vector& ComposedQuadrature::dmean_dpoints_vec(VectorConstRef vec)
-    {
-        // out = (w_1*v_1  w_1*v_2  w_1*v_3  ...  w_2*v_1  w_2*v_2   w_2*v_3  ...)^T
-
-        // Set and return output
-        for(typeInt i = 0; i < numPoints_; ++i)
-        {
-            dmean_dpoints_vec_.segment(i * dim_, dim_) = weights_(i) * vec;
-        }
-        return dmean_dpoints_vec_;
-    }
-
     const Vector& ComposedQuadrature::dmean1D_dpoints()
     {
         return weights_;
-    }
-
-    const Vector& ComposedQuadrature::dcov_dpoints_vec(MatrixConstRef points, VectorConstRef vec)
-    {
-        /*
-        * Compute out = vec_1 * dcov_11/dx + vec_2 * dcov_21/dx + ... 
-        * with dcov_ij/dx = sum_k(weightsVar_k * (x_ik - m_i) * (dx_jk/dx - dm_j/d_x) +
-        *                         weightsVar_k * (x_jk - m_j) * (dx_ik/dx - dm_i/d_x))
-        */
-
-        // Mapping of the vec input to a matrix corresponding to the covariance matrix
-        Eigen::Map<const Matrix> vecMatrix(vec.data(), dim_, dim_);
-
-        // Compute the mean and the difference from each sigma point to the mean
-        mean_.noalias() = points * weights_;
-        diffToMean_ = points.colwise() - mean_;
-
-        // out = vec_1 * dcov_11/dx + vec_2 * dcov_21/dx + ... 
-        // Initialize output
-        dcov_dpoints_vec_.setZero();             
-        
-        // Compute dcov_ij/dx
-        for(typeInt j = 0; j < dim_; ++j)
-        {
-            // diffToMean_jk_dx = "1 in element jk" + "weightsMean in row j"
-            diffToMean_jk_dx_.row(j) = weights_.transpose();
-
-            for(typeInt i = 0; i < dim_; ++i)
-            {
-                // diffToMean_ik_dx = "1 in element ik" + "weightsMean in row i"
-                diffToMean_ik_dx_.row(i) = weights_.transpose();
-                
-                // Set dcov to zero
-                dcov_.setZero();
-
-                // Go through all sigma points
-                for(typeInt k = 0; k < numPoints_; ++k)
-                {
-                    // Add 1 at elements jk and ik
-                    diffToMean_jk_dx_(j, k) += 1.0;
-                    diffToMean_ik_dx_(i, k) += 1.0;
-
-                    // Add dcov_ij_dx for sigmapoint k
-                    dcov_ += weights_(k) * (diffToMean_(i, k) * diffToMean_jk_dx_ + diffToMean_(j, k) * diffToMean_ik_dx_);
-
-                    // Remove 1 at elements jk and ik
-                    diffToMean_jk_dx_(j, k) -= 1.0;
-                    diffToMean_ik_dx_(i, k) -= 1.0;
-                }
-                // Remove row j
-                diffToMean_jk_dx_.row(i).setZero();
-
-                // Add vecMatrix_ij * dcov_ij/dx to the output
-                dcov_dpoints_vec_ += vecMatrix(i, j) * dcov_.reshaped(dim_ * numPoints_, 1);
-            }
-            // Remove row i
-            diffToMean_ik_dx_.row(j).setZero();
-        }
-        return dcov_dpoints_vec_;
     }
 
     const Vector& ComposedQuadrature::dvar_dpoints(RowVectorConstRef points)
@@ -212,17 +159,18 @@ namespace grampc
         // Compute mean
         tempScalar = points * weights_;
 
-        // Difference of each point to the mean
+        // difference between points and mean
         for(typeInt i = 0; i < numPoints_; ++i)
         {
             diffToMean1D_(i) = points(i) - tempScalar;
         }
+
+        tempScalar = - 2.0 * diffToMean1D_ * weights_.cwiseProduct(weights_); 
         
-        // derivative of the variance
-        tempScalar = diffToMean1D_ * weights_;   
+        // Derivative of the variance
         for(typeInt i = 0; i < numPoints_; ++i)
         {
-            dvar_dpoints_(i) = 2.0 * weights_(i) * (diffToMean1D_(i) - tempScalar);
+            dvar_dpoints_(i) = 2.0 * weights_(i) * diffToMean1D_(i) + tempScalar;
         }
         return dvar_dpoints_;
     }
@@ -247,19 +195,19 @@ namespace grampc
         return normalizedPoints_;
     }
 
-    PointTransformationPtr Quadrature(const std::vector<PolynomialFamily>& polyFamily, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
+    PointTransformationPtr Quadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
     {
-        return PointTransformationPtr(new ComposedQuadrature(polyFamily, quadratureOrder));
+        return PointTransformationPtr(new ComposedQuadrature(dimX, dimY, polyFamily, quadratureOrder));
     }
 
-    PointTransformationPtr Quadrature(const std::vector<PolynomialFamily>& polyFamily, const std::vector<typeInt>& quadratureOrder)
+    PointTransformationPtr Quadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, const std::vector<typeInt>& quadratureOrder)
     {
-        return PointTransformationPtr(new ComposedQuadrature(polyFamily, quadratureOrder));
+        return PointTransformationPtr(new ComposedQuadrature(dimX, dimY, polyFamily, quadratureOrder));
     }
 
-    PointTransformationPtr Quadrature(const std::vector<PolynomialFamily>& polyFamily, typeInt quadratureOrder)
+    PointTransformationPtr Quadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt quadratureOrder)
     {
-        return PointTransformationPtr(new ComposedQuadrature(polyFamily, quadratureOrder));
+        return PointTransformationPtr(new ComposedQuadrature(dimX, dimY, polyFamily, quadratureOrder));
     }
 
 } // namespace grampc

@@ -67,6 +67,17 @@ namespace grampc
         return DistributionPtr(new Distribution(dim));
     }
 
+    DistributionPtr Dist(VectorConstRef mean, MatrixConstRef covariance, const std::vector<PolynomialFamily>& poly)
+    {
+        return DistributionPtr(new Distribution(mean, covariance, poly));
+    }
+
+    DistributionPtr Dist(VectorConstRef mean, MatrixConstRef covariance, MatrixConstRef covChol,  const std::vector<PolynomialFamily>& poly)
+    {
+        return DistributionPtr(new Distribution(mean, covariance, covChol, poly));
+    }
+
+
     typeInt numberOfDimensions(const std::vector<DistributionPtr>& distributions)
     {
         typeInt dim = 0;

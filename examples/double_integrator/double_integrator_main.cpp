@@ -3,88 +3,63 @@
 #include <iostream>
 #include <random>
 #include <Eigen/Dense>
-
 #include "grampc_s.hpp"
-#include "vehicle_problem_description.hpp"
+#include "double_integrator_problem_description.hpp"
 
 using namespace grampc;
 
 int main()
 {
-    // Initial state  and parameter distribution
-    Vector initialStateVariance(6);
-    initialStateVariance << 1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8;
-    Matrix initialStateCov = initialStateVariance.asDiagonal();
-    DistributionPtr state = Gaussian(Vector::Constant(6, 0.0), initialStateCov);
-    MultiDistributionPtr param = MultiDist({Gaussian(1.0, 1e-6),
-                                            Uniform(-200, 200),
-                                            Uniform(-200, 200),
-                                            Uniform(-400, 400)});
+    // State  and parameter distribution
+    Vector x0(2);
+    x0 << 2, 0;
+    DistributionPtr state = Gaussian(x0, 1e-6 * Matrix::Identity(2, 2));
 
-    // Prediction horizon, sampling time, and initial time
-    typeRNum Thor = 1.0;
-    typeRNum dt = 0.02;
-    typeRNum t = 0;
+    Vector WienerProcessVariance(2);
+    WienerProcessVariance << 0.001, 0.001;
+    Matrix covProcessNoise = WienerProcessVariance.asDiagonal();
 
     // Point transformation that can be used for the uncertainty propagation
-    PointTransformationPtr transform = UT(state->dimension() + param->dimension(), state->dimension(), 1, 2, 0, {0, 0, 0, 0, 0, 0, 1, 1, 1, 1});
-    // PointTransformationPtr transform = StirlingFirstOrder(state->dimension() + param->dimension(), state->dimension(), 1, {0, 0, 0, 0, 0, 0, 1, 1, 1, 1});
-    // PointTransformationPtr transform = StirlingSecondOrder(state->dimension() + param->dimension(), state->dimension(), 1, {0, 0, 0, 0, 0, 0, 1, 1, 1, 1});
-    // PointTransformationPtr transform = Quadrature(state->dimension() + param->dimension(), state->dimension(), MultiDist({state, param})->polynomialFamily(), {1,1,1,1,1,1,3,3,3,3});
-    // PointTransformationPtr transform = PCE(state->dimension() + param->dimension(), state->dimension(), MultiDist({state, param})->polynomialFamily(), 2, {1,1,1,1,1,1,3,3,3,3});
+    PointTransformationPtr transform = UT(state->dimension(), state->dimension(), 0.1, 2, 0);
+    // PointTransformationPtr transform = StirlingFirstOrder(state->dimension(), state->dimension(), 1);
+    // PointTransformationPtr transform = StirlingSecondOrder(state->dimension(), state->dimension(), 1);
+
+    // Prediction horizon, sampling time, and initial time
+    typeRNum Thor = 4;
+    typeRNum dt = 0.001;
 
     // Desired values for states and inputs
-    std::vector<typeRNum> xdes = {0.0, 0.0, 0.0, 50.0, 0.5, 0.0};
-    std::vector<typeRNum> udes = {0.0};
+    std::vector<typeRNum> xdes = {0, 0};
+    std::vector<typeRNum> udes = {0};
 
     // Input constraints
-    std::vector<typeRNum> umax = {0.1};
-    std::vector<typeRNum> umin = {-0.1};
+    std::vector<typeRNum> umax = {1};
+    std::vector<typeRNum> umin = {-1};
 
     // Declaration of vectors for the problem description
-    std::vector<typeRNum> pSys;
     std::vector<typeRNum> pCost;
     std::vector<typeRNum> pCon;
 
     // Initial input and tolerance of the constraints
-    std::vector<typeRNum> u0 = {0.0};
-    std::vector<typeRNum> constraintsAbsTol = {1e-5, 1e-5, 1e-5};
+    std::vector<typeRNum> u0 = {0};
+    std::vector<typeRNum> constraintsAbsTol = {1e-6};
 
-    // System parameters
-    pSys.push_back(1200.0); // Mass of the vehicle
-    pSys.push_back(9.81);   // Gravity constant
-    pSys.push_back(1800.0); // Moment of inertia
-    pSys.push_back(1.1);    // Distance between CoG and front axle
-    pSys.push_back(1.4);    // Distance between CoG and rear axle
-    pSys.push_back(30.0);   // Cornering stiffness coefficient at front tire
-    pSys.push_back(10.0);   // Cornering stiffness coefficient at rear tire
-    pSys.push_back(15.0);   // Speed of the vehicle (constant)
+    // Iterative Cost
+    pCost.push_back(1e-3); // Coefficient for (u-u_Des)^2
+    pCost.push_back(1.0);  // Coefficient for (x1-x1_Des)^2
+    pCost.push_back(1.0); // Coefficient for (x2-x2_Des)^2
 
-    // Iterative Cost Q
+    // Terminal Cost 
     pCost.push_back(10.0);  // Coefficient for (x1-x1_Des)^2
-    pCost.push_back(0.0); // Coefficient for (x2-x2_Des)^2
-    pCost.push_back(0.0); // Coefficient for (x3-x3_Des)^2
-    pCost.push_back(0.0);  // Coefficient for (x4-x4_Des)^2
-    pCost.push_back(1.0);  // Coefficient for (x5-x5_Des)^2
-    pCost.push_back(0.0);  // Coefficient for (x6-x6_Des)^2
-
-    // End cost P
-    pCost.push_back(10.0); // Coefficient for (x1-x1_Des)^2
-    pCost.push_back(0.0); // Coefficient for (x2-x2_Des)^2
-    pCost.push_back(0.0); // Coefficient for (x3-x3_Des)^2
-    pCost.push_back(0.0); // Coefficient for (x4-x4_Des)^2
-    pCost.push_back(0.0); // Coefficient for (x5-x5_Des)^2
-    pCost.push_back(0.0); // Coefficient for (x6-x6_Des)^2
-
-    // Input cost R
-    pCost.push_back(0.0); // Coefficient for (u-u_Des)^2
+    pCost.push_back(10.0);  // Coefficient for (x2-x2_Des)^2
+    pCost.push_back(1.0);  // Coefficient for T
 
     // Constraint parameters
-    pCon.push_back(0.5);
+    pCon.push_back(-0.8);
 
     // Chance constraint probability
-    Vector vec_chance_constraint(3);
-    vec_chance_constraint << 0.95, 0.95, 0.95;
+    Vector vec_chance_constraint(1);
+    vec_chance_constraint << 0.84134;
 
     // Chance constraint approximation
     // ChanceConstraintApproximationPtr constraintApprox = Chebyshev(vec_chance_constraint);
@@ -92,18 +67,17 @@ int main()
     ChanceConstraintApproximationPtr constraintApprox = GaussianApprox(vec_chance_constraint);
 
     // create nominal problem description
-    StochasticProblemDescriptionPtr vehicle_problem = StochasticProblemDescriptionPtr(new VehicleProblemDescription(pSys, pCost, pCon));
+    StochasticProblemDescriptionPtr integratorProblem = StochasticProblemDescriptionPtr(new DoubleIntegratorProblemDescription(pCost, pCon));
 
     // configure stochastic problem description
-    grampc::SigmaPointProblemDescription problem(vehicle_problem, constraintApprox, transform);
+    grampc::ResamplingProblemDescription problem(integratorProblem, constraintApprox, transform, covProcessNoise);
 
     // create solver
     grampc::Grampc solver(&problem);
-
     const typeGRAMPCparam *par = solver.getParameters();
 
     // set initial states and parameters depending on the propagation method
-    problem.compute_x0_and_p0(state, param);
+    problem.compute_x0_and_p0(state);
     solver.setparam_real_vector("x0", problem.x0());
     solver.setparam_real_vector("p0", problem.p0());
 
@@ -113,7 +87,6 @@ int main()
     // set parameters
     solver.setparam_real("Thor", Thor);
     solver.setparam_real("dt", dt);
-    solver.setparam_real("t0", t);
     solver.setparam_real_vector("xdes", &xdes[0]);
     solver.setparam_real_vector("u0", &u0[0]);
     solver.setparam_real_vector("udes", &udes[0]);
@@ -121,15 +94,13 @@ int main()
     solver.setparam_real_vector("umin", &umin[0]);
 
     // set options
-    solver.setopt_int("MaxGradIter", 4);
+    solver.setopt_int("MaxGradIter", 3);
     solver.setopt_int("MaxMultIter", 3);
     solver.setopt_int("Nhor", 20);
+    solver.setopt_string("Integrator", "heun");
     solver.setopt_real("PenaltyMin", 1e3);
     solver.setopt_real_vector("ConstraintsAbsTol", &constraintsAbsTol[0]);
-    solver.setopt_string("InequalityConstraints", "on");
-    solver.setopt_string("TerminalCost", "on");
-    solver.setopt_string("Integrator", "heun");
-
+    solver.setopt_string("OptimTime", "on");
 
     // open output files
     std::ofstream tout("tvec.txt");
@@ -157,7 +128,7 @@ int main()
     dimOut << "VariableName,Data" << std::endl;
     dimOut << "Nx," << state->dimension() << std::endl;
     dimOut << "Nu," << u0.size() << std::endl;
-    dimOut << "Np," << param->dimension() << std::endl;
+    dimOut << "Np," << 0 << std::endl;
     dimOut << "Nh," << solver.getParameters()->Nh;
 
     typeRNum tempConstraint[Nc];

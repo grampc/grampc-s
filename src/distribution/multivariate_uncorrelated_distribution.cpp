@@ -46,8 +46,11 @@ namespace grampc
          // Go through all distributions
         for(const DistributionConstPtr& dist : distributions_)
         {
-            sample_.segment(iterator, dist->dimension()) = dist->sample(rng);
-            iterator += dist->dimension();
+            if(dist->dimension() > 0)
+            {
+                sample_.segment(iterator, dist->dimension()) = dist->sample(rng);
+                iterator += dist->dimension();
+            }
         }
         return sample_;
     }

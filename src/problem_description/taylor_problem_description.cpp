@@ -4,13 +4,20 @@
 namespace grampc
 {
     TaylorProblemDescription::TaylorProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation)
-        : problemDescription_(problemDescription),
-          constraintTighteningCoeff_(constraintApproximation->tighteningCoefficient())
+        : TaylorProblemDescription(problemDescription, constraintApproximation, Matrix::Zero(1,1))
     {
-        typeInt Ng, NgT, NhT;
+        covWienerProcess_ = Matrix::Zero(numStates_, numStates_);
+    }
+
+    TaylorProblemDescription::TaylorProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation, MatrixConstRef covWienerProcess)
+        : problemDescription_(problemDescription),
+          constraintTighteningCoeff_(constraintApproximation->tighteningCoefficient()),
+          covWienerProcess_(covWienerProcess)
+    {
+        typeInt Ng, NgT;
 
         // Call ocp_dim to get the number of states, controls, parameters, and constraints
-        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, &Ng, &numConstraints_, &NgT, &NhT);
+        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, &Ng, &numConstraints_, &NgT, &numTerminalConstraints_);
 
         // allocate memory
         x0_ = Matrix::Zero(numStates_, 1 + numStates_ + numParams_);
@@ -26,6 +33,11 @@ namespace grampc
         dhdxdx_ = Matrix::Zero(numStates_, numStates_  * numConstraints_);
         dhdxdu_ = Matrix::Zero(numStates_, numControlInputs_ * numConstraints_);
         constraintStdDev_ = Vector::Zero(numConstraints_);
+        dhTdx_ = Matrix::Zero(numTerminalConstraints_, numStates_);
+        dhTdvar_ = Vector::Zero(numTerminalConstraints_);
+        dhTdxdx_ = Matrix::Zero(numStates_, numStates_  * numTerminalConstraints_);
+        dhTdxdT_ = Matrix::Zero(numStates_, numTerminalConstraints_);
+        terminalConstraintStdDev_ = Vector::Zero(numTerminalConstraints_);
         temp_vec_numStates_ = Vector::Zero(numStates_);
         temp_mat_numStates_ = Matrix::Zero(numStates_, numStates_);
         temp_mat_numStates_numParams_ = Matrix::Zero(numStates_, numParams_);
@@ -34,12 +46,13 @@ namespace grampc
 
     void TaylorProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
     {
-        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, Ng, &numConstraints_, NgT, NhT);
+        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, Ng, &numConstraints_, NgT, &numTerminalConstraints_);
 
-        *Nx = numStates_ + numStates_ * numStates_ + numStates_ * numParams_; // mean of states, covariance of states, covariance of states and parameters
+        *Nx = numStates_ + numStates_ * numStates_ + numStates_ * numParams_; // mean of states, covariance of states, cross-covariance of states and parameters
         *Nu = numControlInputs_;
         *Nh = numConstraints_;
         *Np = numParams_ + numParams_ * numParams_;
+        *NhT = numTerminalConstraints_;
     }
 
     void TaylorProblemDescription::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
@@ -63,13 +76,11 @@ namespace grampc
         // d/dt mean = f(mean)
         problemDescription_->ffct(d_stateMean.data(), t, stateMean.data(), u, paramMean.data());
 
-        // d/dt cov_state = dfdx(mean) * cov_state + cov_state * dfdx(mean)^T + dfdp(mean) * cov_state_param^T + cov_state_param * dfdp(mean)^T
-        d_stateCov.noalias() = dfdx_ * stateCov + stateCov * dfdx_.transpose() + dfdp_ * stateParamCov.transpose() + stateParamCov * dfdp_.transpose();
+        // d/dt cov_state = dfdx(mean) * cov_state + cov_state * dfdx(mean)^T + dfdp(mean) * cov_state_param^T + cov_state_param * dfdp(mean)^T + covariance of Wiener process
+        d_stateCov.noalias() = dfdx_ * stateCov + stateCov * dfdx_.transpose() + dfdp_ * stateParamCov.transpose() + stateParamCov * dfdp_.transpose() + covWienerProcess_;
 
         // d/dt cov_state_param = dfdx(mean) * cov_state_param + dfdp(mean) * cov_param
         d_stateParamCov.noalias() = dfdx_ * stateParamCov +  dfdp_ * paramCov;
-
-        // Note: covariance of process noise can be directly added to dcov
     }
 
     void TaylorProblemDescription::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *adj, ctypeRNum *u, ctypeRNum *p)
@@ -173,7 +184,6 @@ namespace grampc
     void TaylorProblemDescription::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
     {
         problemDescription_->lfct(out, t, x, u, p, xdes, udes);
-        // TODO: implement second-order approximation for cost function
     }
 
     void TaylorProblemDescription::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
@@ -189,12 +199,16 @@ namespace grampc
     void TaylorProblemDescription::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
     {
         problemDescription_->Vfct(out, t, x, p, xdes);
-        // TODO: implement second-order approximation for cost function
     }
 
     void TaylorProblemDescription::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
     {
         problemDescription_->dVdx(out, t, x, p, xdes);
+    }
+
+    void TaylorProblemDescription::dVdT(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    {
+        problemDescription_->dVdT(out, t, x, p, xdes);
     }
 
     void TaylorProblemDescription::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
@@ -252,7 +266,7 @@ namespace grampc
         {
             temp_mat_numStates_.noalias() = covStates * dhdxdx_.middleCols(i * numStates_, numStates_);
 
-            // dhdx_ is computed ind hfct
+            // dhdx_ is computed in hfct
             outStateMean.noalias() += 2.0 * dhdvar_(i) * dhdx_.row(i) * temp_mat_numStates_;
         }
     }
@@ -278,6 +292,89 @@ namespace grampc
 
             // dhdx_ is computed in hfct, dhdvar in dhdx_vec
             outVec.noalias() += 2.0 * dhdvar_(i) * dhdx_.row(i) * temp_mat_numStates_numControlInputs_;
+        }
+    }
+
+    void TaylorProblemDescription::hTfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p)
+    {
+        Eigen::Map<const Matrix> covStates(x + numStates_, numStates_, numStates_);
+
+        // evaluate constraint at the mean
+        problemDescription_->hTfct(out, t, x, p);
+
+        // evaluate constraint derivatives
+        problemDescription_->dhTdx(dhTdx_.data(), t, x, p);
+
+        // tighten constraints
+        for(typeInt i = 0; i < numTerminalConstraints_; ++i)
+        {
+            temp_vec_numStates_.noalias() = covStates * dhTdx_.row(i).transpose();
+
+            terminalConstraintStdDev_(i) = std::sqrt(dhTdx_.row(i) * temp_vec_numStates_);
+            out[i] += constraintTighteningCoeff_(numConstraints_ + i) * terminalConstraintStdDev_(i);
+        }
+    }
+
+    void TaylorProblemDescription::dhTdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec)
+    {
+        // Mapping of the inputs
+        Eigen::Map<const Matrix> covStates(x + numStates_, numStates_, numStates_);
+
+        // Mapping of the outputs
+        Eigen::Map<Vector> outStateMean(out, numStates_);
+        Eigen::Map<Matrix> outStateCov(out + numStates_, numStates_, numStates_);
+        Eigen::Map<Matrix> outStateParamCov(out + numStates_ + numStates_ * numStates_, numStates_, numParams_);
+
+        // derivative of the constraint
+        problemDescription_->dhTdxdx(dhTdxdx_.data(), t, x, p);
+
+        // Covariance between states and parameters does not effect the output
+        outStateParamCov.setZero();
+
+        // d(mean_hT)/d(mean_x)
+        problemDescription_->dhTdx_vec(outStateMean.data(), t, x, p, vec);
+
+        // d(var_hT)/d(cov_x)
+        outStateCov.setZero(); 
+        for(typeInt i = 0; i < numTerminalConstraints_; ++i)
+        {
+            // use a lower bound of the standard deviation to prevent dividing by 0
+            dhTdvar_(i) = constraintTighteningCoeff_(numConstraints_ + i) * vec[i] / (2.0 * std::max(stdDevMin_, terminalConstraintStdDev_(i)));
+
+            // dhTdx_ is computed ind hTfct
+            outStateCov.noalias() += dhTdvar_(i) * dhTdx_.row(i).transpose() * dhTdx_.row(i);
+        }
+
+        // d(var_hT)/d(mean_x)
+        for(typeInt i = 0; i < numTerminalConstraints_; ++i)
+        {
+            temp_mat_numStates_.noalias() = covStates * dhTdxdx_.middleCols(i * numStates_, numStates_);
+
+            // dhTdx_ is computed in hTfct
+            outStateMean.noalias() += 2.0 * dhTdvar_(i) * dhTdx_.row(i) * temp_mat_numStates_;
+        }
+    }
+
+    void TaylorProblemDescription::dhTdT_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec)
+    {
+        out[0] = 0.0;
+
+        // Mapping of the inputs
+        Eigen::Map<const Matrix> covStates(x + numStates_, numStates_, numStates_);
+
+        // d(mean_hT)/dT
+        problemDescription_->dhTdT_vec(out, t, x, p, vec);
+
+        // derivative of the constraint
+        problemDescription_->dhTdxdT(dhTdxdT_.data(), t, x, p);
+
+        // d(var_hT)/dT
+        for(typeInt i = 0; i < numTerminalConstraints_; ++i)
+        {
+            temp_vec_numStates_.noalias() = covStates * dhTdxdT_.col(i);
+
+            // dhTdx_ is computed in hfct, dhdvar in dhTdx_vec
+            out[0] += 2.0 * dhTdvar_(i) * dhTdx_.row(i) * temp_vec_numStates_;
         }
     }
 

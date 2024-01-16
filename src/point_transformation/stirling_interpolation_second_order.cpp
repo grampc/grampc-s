@@ -2,24 +2,34 @@
 
 namespace grampc
 {
-    StirlingInterpolationSecondOrder::StirlingInterpolationSecondOrder(typeInt dim, typeRNum stepSize, const std::vector<bool>& considerUncertain)
-    : dim_(dim),
-      stepsize_(stepSize),
+    StirlingInterpolationSecondOrder::StirlingInterpolationSecondOrder(typeInt dimX, typeInt dimY, typeRNum stepSize, const std::vector<bool>& considerUncertain)
+    : dimX_(dimX),
+      dimY_(dimY),
+      stepSize_(stepSize),
       stepSizeSquared_(stepSize*stepSize),
       numUncertainVariables_(std::count(considerUncertain.begin(), considerUncertain.end(), true)),
       numPoints_(2*numUncertainVariables_ + 1),
-      normalizedPoints_(dim, numPoints_),
-      points_(dim, numPoints_),
+      normalizedPoints_(dimX, numPoints_),
+      points_(dimX, numPoints_),
       weightsMean_(2),
       weightsCov_(2),
-      mean_(dim),
-      covariance_(dim, dim),
-      dmean_dpoints_vec_(dim*numPoints_),
-      dmean1D_dpoints_(numPoints_),
-      dcov_dpoints_vec_(dim*numPoints_),
+      mean_(dimY),
+      covariance_(dimX, dimY),
+      dmean_dpoints_vec_(dimY*numPoints_),
+      dcov_dpointsX_vec_(Vector::Zero(dimX_ * numPoints_)),
+      dcov_dpointsY_vec_(Vector::Zero(dimY_ * numPoints_)),
       dvar_dpoints_(numPoints_),
-      tempVecDim_(dim),
-      tempVecDim2_(dim)
+      dpoints_dmean_vec_(dimY_),
+      dpoints_dcov_vec_(dimX_, dimY_),
+      dmean1D_dpoints_vec_(numPoints_),
+      vecDiff_(dimX_ * dimX_),
+      diffX_(dimX_, dimX_),
+      diffY_(dimY, dimX),
+      diffX2_(dimX_, dimX_),
+      diffY2_(dimY, dimX),
+      temp_vec_dimX_(dimX),
+      temp_vec_dimY_(dimY),
+      temp_vec_dimX_dimX_(dimX * dimX)
     {
         // Vector of indices with uncertain variables
         Eigen::Vector<typeInt, Eigen::Dynamic> uncertainIndices(numUncertainVariables_);
@@ -28,7 +38,7 @@ namespace grampc
         typeInt uncertIndex = 0;
 
         // Fill vector with indices of uncertain variables
-        for(typeInt i = 0; i < dim; ++i)
+        for(typeInt i = 0; i < dimX; ++i)
         {
             if(considerUncertain[i])
             {
@@ -43,20 +53,20 @@ namespace grampc
         weightsCov_(1) = (stepSizeSquared_ - 1.0) / (4.0 * stepSizeSquared_ * stepSizeSquared_);
 
         // Derivative of the one dimensional mean with respect to the points;
-        dmean1D_dpoints_(0) = weightsMean_(0);
-        dmean1D_dpoints_.segment(1, numPoints_ - 1).setConstant(weightsMean_(1));
+        dmean1D_dpoints_vec_(0) = weightsMean_(0);
+        dmean1D_dpoints_vec_.segment(1, numPoints_ - 1).setConstant(weightsMean_(1));
 
         // Set normalized Points
-        Matrix A = Matrix::Zero(dim, numUncertainVariables_);
+        Matrix A = Matrix::Zero(dimX, numUncertainVariables_);
         for(typeInt i = 0; i < numUncertainVariables_; ++i)
         {
-            A(uncertainIndices(i), i) = stepsize_;
+            A(uncertainIndices(i), i) = stepSize_;
         }
-        normalizedPoints_ << Vector::Zero(dim), A, -A;
+        normalizedPoints_ << Vector::Zero(dimX), A, -A;
     }
 
-     StirlingInterpolationSecondOrder::StirlingInterpolationSecondOrder(typeInt dim, typeRNum stepSize)
-     : StirlingInterpolationSecondOrder(dim, stepSize, std::vector<bool>(dim, true))
+     StirlingInterpolationSecondOrder::StirlingInterpolationSecondOrder(typeInt dimX, typeInt dimY, typeRNum stepSize)
+     : StirlingInterpolationSecondOrder(dimX, dimY, stepSize, std::vector<bool>(dimX, true))
     {
     }
 
@@ -68,6 +78,22 @@ namespace grampc
             points_.col(i) = dist->mean();
             points_.col(i).noalias() += chol * normalizedPoints_.col(i);
         }
+        return points_;
+    }
+
+    const Matrix& StirlingInterpolationSecondOrder::points(VectorConstRef mean, MatrixConstRef covCholesky)
+    {
+        for(typeInt i = 0; i < numPoints_; ++i)
+        {
+            points_.col(i) = mean;
+            points_.col(i).noalias() += covCholesky * normalizedPoints_.col(i);
+        }
+
+        return points_;
+    }
+
+    const Matrix& StirlingInterpolationSecondOrder::points()
+    {
         return points_;
     }
 
@@ -91,14 +117,20 @@ namespace grampc
         return tempScalar_;
     }
 
-    const Matrix& StirlingInterpolationSecondOrder::covariance(MatrixConstRef points)
+    const Matrix& StirlingInterpolationSecondOrder::covariance(MatrixConstRef pointsX, MatrixConstRef pointsY)
     {
         covariance_.setZero();
         for(typeInt i = 1; i <= numUncertainVariables_; ++i)
         {
-            tempVecDim_ = points.col(i) - points.col(i + numUncertainVariables_);
-            tempVecDim2_ = points.col(i) + points.col(i + numUncertainVariables_) - 2.0 * points.col(0);
-            covariance_.noalias() += tempVecDim_ * tempVecDim_.transpose() * weightsCov_(0) + tempVecDim2_ * tempVecDim2_.transpose() * weightsCov_(1);
+            temp_vec_dimX_ = pointsX.col(i) - pointsX.col(i + numUncertainVariables_);
+            temp_vec_dimY_ = pointsY.col(i) - pointsY.col(i + numUncertainVariables_);
+
+            covariance_.noalias() += weightsCov_(0) * temp_vec_dimX_ * temp_vec_dimY_.transpose();
+
+            temp_vec_dimX_ = pointsX.col(i) + pointsX.col(i + numUncertainVariables_) - 2.0 * pointsX.col(0);
+            temp_vec_dimY_ = pointsY.col(i) + pointsY.col(i + numUncertainVariables_) - 2.0 * pointsY.col(0);
+
+            covariance_.noalias() += weightsCov_(1) * temp_vec_dimX_ * temp_vec_dimY_.transpose();
         }
         return covariance_;
     }
@@ -117,30 +149,124 @@ namespace grampc
 
      const Vector& StirlingInterpolationSecondOrder::dmean_dpoints_vec(VectorConstRef vec)
     {
-        dmean_dpoints_vec_.segment(0, dim_) = weightsMean_(0) * vec;
+        dmean_dpoints_vec_.segment(0, dimY_) = weightsMean_(0) * vec;
 
         for(typeInt i = 1; i <= numUncertainVariables_; ++i)
         {
-            dmean_dpoints_vec_.segment(i*dim_, dim_) = weightsMean_(1) * vec;
-            dmean_dpoints_vec_.segment((i + numUncertainVariables_) * dim_, dim_) = weightsMean_(1) * vec;
+            dmean_dpoints_vec_.segment(i*dimY_, dimY_) = weightsMean_(1) * vec;
+            dmean_dpoints_vec_.segment((i + numUncertainVariables_) * dimY_, dimY_) = weightsMean_(1) * vec;
         }
         return dmean_dpoints_vec_;
     }
 
     const Vector& StirlingInterpolationSecondOrder::dmean1D_dpoints()
     {
-        return dmean1D_dpoints_;
+        return dmean1D_dpoints_vec_;
     }
 
-    const Vector& StirlingInterpolationSecondOrder::dcov_dpoints_vec(MatrixConstRef points, VectorConstRef vec)
+    const Vector& StirlingInterpolationSecondOrder::dcov_dpointsX_vec(MatrixConstRef pointsY, VectorConstRef vec)
+    {      
+        // difference between points
+        for(typeInt i = 1; i < dimX_ + 1; ++i)
+        {
+            diffY_.col(i-1) = pointsY.col(i) - pointsY.col(i + dimX_);
+            diffY2_.col(i-1) = pointsY.col(i) + pointsY.col(i + dimX_) - 2.0 * pointsY.col(0);
+        }
+
+        // Initialize gradient of the first point
+        dcov_dpointsX_vec_.segment(0, dimX_).setZero();
+
+        // Compute the gradient
+        for(typeInt k = 1; k < dimX_ + 1; ++k)
+        {
+            for(typeInt i = 0; i < dimX_; ++i)
+            {
+                dcov_dpointsX_vec_(i + k * dimX_) = (diffY_.col(k-1).transpose() * vec(Eigen::seqN(i, dimY_, dimX_))).value() * weightsCov_(0);
+                dcov_dpointsX_vec_(i + (k + dimX_) * dimX_) = - dcov_dpointsX_vec_(i + k * dimX_);
+                                                  
+                tempScalar_ = (diffY2_.col(k-1).transpose() * vec(Eigen::seqN(i, dimY_, dimX_))).value() * weightsCov_(1);
+                dcov_dpointsX_vec_(i + k * dimX_) += tempScalar_;
+                dcov_dpointsX_vec_(i + (k + dimX_) * dimX_) += tempScalar_;
+
+                // Gradient of the first point
+                dcov_dpointsX_vec_(i) += -2.0 * tempScalar_;
+            }
+        }
+        return dcov_dpointsX_vec_;
+    }
+
+    const Vector& StirlingInterpolationSecondOrder::dcov_dpointsY_vec(MatrixConstRef pointsX, VectorConstRef vec)
     {
-        std::cerr << "not implemented!" << std::endl;
-        return dcov_dpoints_vec_;
+        // difference between points
+        for(typeInt i = 1; i < dimX_ + 1; ++i)
+        {
+            diffX_.col(i-1) = pointsX.col(i) - pointsX.col(i + dimX_);
+            diffX2_.col(i-1) = pointsX.col(i) + pointsX.col(i + dimX_) - 2.0 * pointsX.col(0);
+        }
+
+        // Initialize gradient of the first point
+        dcov_dpointsY_vec_.segment(0, dimY_).setZero();
+
+        // Compute the gradient
+        for(typeInt k = 1; k < dimX_ + 1; ++k)
+        {
+            for(typeInt i = 0; i < dimY_; ++i)
+            {
+                dcov_dpointsY_vec_(i + k * dimY_) = (diffX_.col(k-1).transpose() * vec.segment(i * dimX_, dimX_)).value() * weightsCov_(0);
+                dcov_dpointsY_vec_(i + (k + dimX_) * dimY_) = - dcov_dpointsY_vec_(i + k * dimY_);
+                                                  
+                tempScalar_ = (diffX2_.col(k-1).transpose() * vec.segment(i * dimX_, dimX_)).value() * weightsCov_(1);
+                dcov_dpointsY_vec_(i + k * dimY_) += tempScalar_;
+                dcov_dpointsY_vec_(i + (k + dimX_) * dimY_) += tempScalar_;
+
+                // Gradient of the first point
+                dcov_dpointsY_vec_(i) += -2.0 * tempScalar_;
+            }
+        }
+        return dcov_dpointsY_vec_;
+    }
+
+    const Vector& StirlingInterpolationSecondOrder::dpoints_dmean_vec(VectorConstRef vec)
+    {
+        for(typeInt i = 0; i < dimY_; ++i)
+        {
+            dpoints_dmean_vec_(i) = vec(i);
+            for(typeInt j = 1; j < numPoints_; ++j)
+            {
+                dpoints_dmean_vec_(i) += vec(i + j * dimX_);
+            }
+        }
+        return dpoints_dmean_vec_;
+    }
+
+    const Matrix& StirlingInterpolationSecondOrder::dpoints_dcov_vec(MatrixConstRef covCholesky, VectorConstRef vec)
+    {
+        // Vector of points 1 ... n minus Vector of points n+1 ... 2*n
+        vecDiff_ = vec.segment(dimX_, dimX_ * dimX_).transpose() - vec.segment(dimX_ * (dimX_ + 1 ), dimX_ * dimX_).transpose();
+
+        // upper half must be zero for the derivative of the Cholesky decompsition
+        temp_vec_dimX_dimX_.setZero();
+        for(typeInt k = 0; k < dimX_; ++k)
+        {
+            for(typeInt l = 0; l < dimY_; ++l)
+            {
+                // Compute derivative of the cholesky decomposition
+                deriveCholesky(temp_vec_dimX_dimX_, covCholesky, k, l);
+
+                // scale derivative 
+                temp_vec_dimX_dimX_ *= stepSize_;
+
+                // multiply derivative and vector
+                dpoints_dcov_vec_(k, l) = vecDiff_ * temp_vec_dimX_dimX_;
+            }
+        }
+
+        return dpoints_dcov_vec_;
     }
 
     const Vector& StirlingInterpolationSecondOrder::dvar_dpoints(RowVectorConstRef points)
     {
-        tempScalar_ = 1.0/(2.0 * stepsize_ * stepsize_);
+        tempScalar_ = 1.0/(2.0 * stepSize_ * stepSize_);
         tempScalar2_ = 2.0 * weightsCov_(1);
 
         dvar_dpoints_(0) = 0.0;
@@ -161,13 +287,13 @@ namespace grampc
         return numPoints_;
     }
 
-    PointTransformationPtr StirlingSecondOrder(typeInt dim, typeRNum stepSize, const std::vector<bool>& considerUncertain)
+    PointTransformationPtr StirlingSecondOrder(typeInt dimX, typeInt dimY, typeRNum stepSize, const std::vector<bool>& considerUncertain)
     {
-        return PointTransformationPtr(new StirlingInterpolationSecondOrder(dim, stepSize, considerUncertain));
+        return PointTransformationPtr(new StirlingInterpolationSecondOrder(dimX, dimY, stepSize, considerUncertain));
     }
 
-    PointTransformationPtr StirlingSecondOrder(typeInt dim, typeRNum stepSize)
+    PointTransformationPtr StirlingSecondOrder(typeInt dimX, typeInt dimY, typeRNum stepSize)
     {
-        return PointTransformationPtr(new StirlingInterpolationSecondOrder(dim, stepSize));
+        return PointTransformationPtr(new StirlingInterpolationSecondOrder(dimX, dimY, stepSize));
     }
 }

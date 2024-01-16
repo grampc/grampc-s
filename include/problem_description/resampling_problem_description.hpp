@@ -1,5 +1,5 @@
-#ifndef SIGMA_POINT_PROBLEM_DESCRIPTION_HPP
-#define SIGMA_POINT_PROBLEM_DESCRIPTION_HPP
+#ifndef RESAMPLING_PROBLEM_DESCRIPTION_HPP
+#define RESAMPLING_PROBLEM_DESCRIPTION_HPP
 
 #include "problem_description/grampc_interface.hpp"
 #include "point_transformation/point_transformation.hpp"
@@ -9,13 +9,16 @@
 namespace grampc
 {
     // Interface to GRAMPC using a point-based approximation of the uncertainties
-    class SigmaPointProblemDescription : public StochasticProblemDescription
+    class ResamplingProblemDescription : public StochasticProblemDescription
     {
     public:
         // Constructor specifying the approximation type of the constraints and the type of the point-based uncertainty approximation
-        SigmaPointProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,
+        ResamplingProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,
                                     PointTransformationPtr pointTransformation);
         
+        // Constructor with zero-mean Wiener process and specified covariance matrix
+        ResamplingProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,
+                                    PointTransformationPtr pointTransformation, MatrixConstRef covWienerProcess);
 
         /** OCP dimensions: states (Nx), controls (Nu), parameters (Np), equalities (Ng), 
 			inequalities (Nh), terminal equalities (NgT), terminal inequalities (NhT) **/
@@ -96,28 +99,34 @@ namespace grampc
         typeInt numControlInputs_;
         typeInt numConstraints_;
         typeInt numTerminalConstraints_;
+        typeInt pointDim_;
         typeRNum tempScalar_;
         
         StochasticProblemDescriptionPtr problemDescription_;
         PointTransformationPtr pointTransformation_;
-        MultiDistributionPtr stateAndParam_;
         Vector constraintTighteningCoeff_;
-        Matrix x0_;
-        Matrix p0_;
-        Matrix constraintMatrix_;
+        Vector x0_;
+        Vector p0_;
         Vector constraintStdDev_;
-        RowVector dmean_dPoints_;
-        Matrix constraintVec_;
-        Matrix terminalConstraintMatrix_;
         Vector terminalConstraintStdDev_;
+        Matrix covWienerProcess_;
+        Matrix pointsTransformed_;
+        Matrix covStateAndParam_;
+        Vector dcov_dPointsY_;
+        Vector meanStateAndParam_;
+        Matrix constraintMatrix_;
+        Matrix terminalConstraintMatrix_;
+        RowVector dmean1D_dPoints_;
+        Matrix constraintVec_;
         Matrix terminalConstraintVec_;
 
+        // Standard Cholesky decomposition
+        Eigen::LLT<Matrix> llt_;
+
         // Temporary vectors
-        Vector temp_vec_numStates_;
+        Vector temp_vec_pointDim_numPoints_;
         Vector temp_vec_numInputs_;
-        Vector temp_vec_numParams_;
-        RowVector temp_vec_numSigmaPoints_;        
     };
 }
 
-#endif // SIGMA_POINT_PROBLEM_DESCRIPTION_HPP
+#endif // RESAMPLING_PROBLEM_DESCRIPTION_HPP

@@ -13,8 +13,7 @@ namespace grampc
     {
     public:
         // Constructor for a problem description based on a Monte-Carlo simulation 
-        MonteCarloProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,
-                                    PointTransformationPtr pointTransformation);
+        MonteCarloProblemDescription(StochasticProblemDescriptionPtr problemDescription, PointTransformationPtr pointTransformation);
         
         /** OCP dimensions: states (Nx), controls (Nu), parameters (Np), equalities (Ng), 
 			inequalities (Nh), terminal equalities (NgT), terminal inequalities (NhT) **/
@@ -50,6 +49,9 @@ namespace grampc
         // Gradient dV/dx
         virtual void dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes) override;
 
+        /** Gradient dV/dT **/
+		virtual void dVdT(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes) override;
+
 
         /** Inequality constraints h(t,x,u,p) < 0
 		-------------------------------------------------- **/
@@ -62,8 +64,22 @@ namespace grampc
         virtual void dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec) override;
 
 
+        /** Terminal inequality constraints hT(T,x,p) < 0 
+         * ------------------------------------------------ **/
+        virtual void hTfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p) override;
+
+		/** Jacobian dhT/dx multiplied by vector vec, i.e. (dhT/dx)^T*vec or vec^T*(dhT/dx) **/
+		virtual void dhTdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec) override;
+        
+		/** Jacobian dhT/dT multiplied by vector vec, i.e. (dhT/dT)^T*vec or vec^T*(dhT/dT) **/
+		virtual void dhTdT_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec) override;
+
+
         // Compute the point-based representation of the initial states and the parameters
         void compute_x0_and_p0(DistributionPtr state, DistributionPtr param);
+
+        // Compute the point-based representation of the initial states and do not replace the parameters
+        void compute_x0_and_p0(DistributionPtr state);
 
         // Return initial state
         ctypeRNum* x0();
@@ -77,6 +93,8 @@ namespace grampc
         typeInt numParams_;
         typeInt numControlInputs_;
         typeInt numConstraints_;
+        typeInt numTerminalConstraints_;
+        typeRNum tempScalar_;
         
         StochasticProblemDescriptionPtr problemDescription_;
         PointTransformationPtr pointTransformation_;

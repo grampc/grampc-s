@@ -14,16 +14,19 @@ namespace grampc
     {
     public:
         // Constructor using an Eigen vector
-        PCE_Transformation(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder);
+        PCE_Transformation(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder);
         
         // Constructor using a std vector
-        PCE_Transformation(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const std::vector<typeInt>& quadratureOrder);
+        PCE_Transformation(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const std::vector<typeInt>& quadratureOrder);
 
         // Constructor with identical quadrature order for all dimensions
-        PCE_Transformation(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, typeInt quadratureOrder);
+        PCE_Transformation(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, typeInt quadratureOrder);
 
        // Get points that represent a distribution
         virtual const Matrix& points(DistributionConstPtr dist) override;
+
+        // Get previously generated points
+        virtual const Matrix& points() override;
 
         // Compute the mean of the distribution
         virtual const Vector& mean(MatrixConstRef points) override;
@@ -31,20 +34,14 @@ namespace grampc
          // Compute the mean of the one-dimensional distribution
         virtual typeRNum mean1D(RowVectorConstRef points) override;
 
-        // Compute the covariance matrix of the distribution
-        virtual const Matrix& covariance(MatrixConstRef points) override;
+        // Compute the cross-covariance matrix of the random vectors x and y 
+        virtual const Matrix& covariance(MatrixConstRef pointsX, MatrixConstRef pointsY) override;
 
         // Compute the variance of the one-dimensional distribution
         virtual typeRNum variance(RowVectorConstRef points) override;
 
-        // Jacobian dmean/dpoints multiplied by vector vec, i.e. (dmean/dpoints)^T*vec
-        virtual const Vector& dmean_dpoints_vec(VectorConstRef vec) override;
-
         // dmean/dpoints multiplied by vector vec, i.e. (dmean/dpoints)^T*vec for a one-dimensional distribution
         virtual const Vector& dmean1D_dpoints() override;
-
-        // Jacobian dcovariance/dpoints multiplied by vector vec, i.e. (d(vector(covariance))/dpoints)^T*vec
-        virtual const Vector& dcov_dpoints_vec(MatrixConstRef points, VectorConstRef vec) override;
 
         // Jacobian dvariance/dpoints multiplied by vector vec, i.e. (d(vector(covariance))/dpoints)^T*vec for a one-dimensional distribution
         virtual const Vector& dvar_dpoints(RowVectorConstRef points) override;
@@ -53,7 +50,8 @@ namespace grampc
         virtual typeInt numberOfPoints() const override;
 
     private:
-        typeInt dim_;
+        typeInt dimX_;
+        typeInt dimY_;
         typeInt dimUncertain_;
         typeInt numPoints_;
         typeInt maxPolyOrder_;
@@ -61,7 +59,8 @@ namespace grampc
         Matrix normalizedPoints_;
         Matrix points_;
         Vector PCE_coefficients_mean_;
-        Matrix PCE_coefficients_cov_;
+        Matrix PCE_coefficientsX_;
+        Matrix PCE_coefficientsY_;
         RowVector PCE_coefficients_var_;
         RowVector PCE_squared_coefficients_var_;
         Vector squaredNorms_;
@@ -70,16 +69,14 @@ namespace grampc
         Matrix covariance_;
         Vector weightsMean_;
         Matrix weightsCov_;
-        Vector dmean_dpoints_vec_;
-        Vector dcov_dpoints_vec_;
         Vector dvar_dpoints_vec_;
         Matrix dcoeff_dpoints;
         Matrix dcoeff_dpoints2;
     };
 
-    PointTransformationPtr PCE(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder);
-    PointTransformationPtr PCE(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const std::vector<typeInt>& quadratureOrder);
-    PointTransformationPtr PCE(const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, typeInt quadratureOrder);
+    PointTransformationPtr PCE(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder);
+    PointTransformationPtr PCE(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const std::vector<typeInt>& quadratureOrder);
+    PointTransformationPtr PCE(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, typeInt quadratureOrder);
 }
 
 #endif // PCE_TRANSFORMATION_HPP

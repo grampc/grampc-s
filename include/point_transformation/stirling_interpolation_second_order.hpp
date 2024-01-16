@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "point_transformation.hpp"
+#include "util/grampc_s_util.hpp"
 
 namespace grampc
 {
@@ -11,13 +12,19 @@ namespace grampc
     {
     public:
         // Constructor considering only the specified variables as uncertain
-        StirlingInterpolationSecondOrder(typeInt dim, typeRNum stepSize, const std::vector<bool>& considerUncertain);
+        StirlingInterpolationSecondOrder(typeInt dimX, typeInt dimY, typeRNum stepSize, const std::vector<bool>& considerUncertain);
 
         // Constructor considering all variables as uncertain
-        StirlingInterpolationSecondOrder(typeInt dim, typeRNum stepSize);
+        StirlingInterpolationSecondOrder(typeInt dimX, typeInt dimY, typeRNum stepSize);
 
         // Get points that represent a distribution
         virtual const Matrix& points(DistributionConstPtr dist) override;
+
+        // Get points that represent a distribution with specified mean and Cholesky decomposition of the covariance matrix
+        virtual const Matrix& points(VectorConstRef mean, MatrixConstRef covCholesky) override;
+
+        // Get previously generated points
+        virtual const Matrix& points() override;
 
         // Compute the mean of the distribution
         virtual const Vector& mean(MatrixConstRef points) override;
@@ -25,8 +32,8 @@ namespace grampc
          // Compute the mean of the one-dimensional distribution
         virtual typeRNum mean1D(RowVectorConstRef points) override;
 
-        // Compute the covariance matrix of the distribution
-        virtual const Matrix& covariance(MatrixConstRef points) override;
+        // Compute the cross-covariance matrix of the random vectors x and y 
+        virtual const Matrix& covariance(MatrixConstRef pointsX, MatrixConstRef pointsY) override;
 
         // Compute the variance of the one-dimensional distribution
         virtual typeRNum variance(RowVectorConstRef points) override;
@@ -34,11 +41,20 @@ namespace grampc
         // Jacobian dmean/dpoints multiplied by vector vec, i.e. (dmean/dpoints)^T*vec
         virtual const Vector& dmean_dpoints_vec(VectorConstRef vec) override;
 
+        // Jacobian d(cov(X, Y) + cov(Y,X))/dX multiplied by vector vec, i.e. (d(vector(cov(X, Y) + cov(Y, X)))/dX)^T*vec
+        virtual const Vector& dcov_dpointsX_vec(MatrixConstRef pointsY, VectorConstRef vec) override;
+
+        // Jacobian d(cov(X, Y) + cov(Y,X))/dY multiplied by vector vec, i.e. (d(vector(cov(X, Y) + cov(Y, X)))/dY)^T*vec
+        virtual const Vector& dcov_dpointsY_vec(MatrixConstRef pointsX, VectorConstRef vec) override;
+
+        // Jacobian dpoints/dmean multiplied by vector vec, i.e. (dpoints/dmean)^T*vec
+        virtual const Vector& dpoints_dmean_vec(VectorConstRef vec) override;
+
+        // Jacobian dpoints/dcov multiplied by vector vec, i.e. (dpoints/vector(cov))^T*vec, covCholesky is the Cholesky decomposition of the covariance matrix
+        virtual const Matrix& dpoints_dcov_vec(MatrixConstRef covCholesky, VectorConstRef vec) override;
+
         // dmean/dpoints multiplied by vector vec, i.e. (dmean/dpoints)^T*vec for a one-dimensional distribution
         virtual const Vector& dmean1D_dpoints() override;
-
-        // Jacobian dcovariance/dpoints multiplied by vector vec, i.e. (d(vector(covariance))/dpoints)^T*vec
-        virtual const Vector& dcov_dpoints_vec(MatrixConstRef points, VectorConstRef vec) override;
 
         // Jacobian dvariance/dpoints multiplied by vector vec, i.e. (d(vector(covariance))/dpoints)^T*vec for a one-dimensional distribution
         virtual const Vector& dvar_dpoints(RowVectorConstRef points) override;
@@ -47,8 +63,9 @@ namespace grampc
         virtual typeInt numberOfPoints() const override;
 
     private:
-        typeInt dim_;
-        typeRNum stepsize_;
+        typeInt dimX_;
+        typeInt dimY_;
+        typeRNum stepSize_;
         typeRNum stepSizeSquared_;
         typeInt numUncertainVariables_;
         typeInt numPoints_;
@@ -59,19 +76,28 @@ namespace grampc
         Vector mean_;
         Matrix covariance_;
         Vector dmean_dpoints_vec_;
-        Vector dmean1D_dpoints_;
-        Vector dcov_dpoints_vec_;
+        Vector dcov_dpointsX_vec_;
+        Vector dcov_dpointsY_vec_;
         Vector dvar_dpoints_;
-        Vector tempVecDim_;
-        Vector tempVecDim2_;
+        Vector dpoints_dmean_vec_;
+        Matrix dpoints_dcov_vec_;
+        Vector dmean1D_dpoints_vec_;
+        RowVector vecDiff_;
+        Matrix diffX_;
+        Matrix diffY_;
+        Matrix diffX2_;
+        Matrix diffY2_;
+        Vector temp_vec_dimX_;
+        Vector temp_vec_dimY_;
+        Vector temp_vec_dimX_dimX_;
         typeRNum tempScalar_;
         typeRNum tempScalar2_;
         typeRNum tempScalar3_;
         typeRNum tempScalar4_;
     };   
 
-    PointTransformationPtr StirlingSecondOrder(typeInt dim, typeRNum stepSize, const std::vector<bool>& considerUncertain);
-    PointTransformationPtr StirlingSecondOrder(typeInt dim, typeRNum stepSize);
+    PointTransformationPtr StirlingSecondOrder(typeInt dimX, typeInt dimY, typeRNum stepSize, const std::vector<bool>& considerUncertain);
+    PointTransformationPtr StirlingSecondOrder(typeInt dimX, typeInt dimY, typeRNum stepSize);
 }
 
 #endif // STIRLING_INTERPOLATION_SECOND_ORDER_HPP

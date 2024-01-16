@@ -3,4 +3,5 @@ target_sources(grampc-s PRIVATE
 	monte_carlo_problem_description.cpp
 	sigma_point_problem_description.cpp
 	stochastic_problem_description.cpp
-	taylor_problem_description.cpp)
+	taylor_problem_description.cpp
+	resampling_problem_description.cpp)

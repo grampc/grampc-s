@@ -60,4 +60,30 @@ namespace grampc
         }
         return out;
     }
+
+    void deriveCholesky(VectorRef out, MatrixConstRef chol, typeInt k, typeInt l)
+    {
+        typeRNum sum;
+        typeInt dim = chol.rows();
+
+        for (typeInt i = 0; i < dim; i++)
+        {
+            for (typeInt j = 0; j <= i; j++)
+            {
+                sum = (i == k) * (j == l);
+                for (typeInt n = 0; n <= j - 1; n++)
+                {
+                    sum -= (chol(i, n) * out(n * dim + j) + chol(j, n) * out(n * dim + i));
+                }
+                if (i > j)
+                {
+                    out(j * dim + i) = (sum - chol(i, j) * out(j * dim + j)) / chol(j, j);
+                }
+                else if (i == j)
+                {
+                    out(j * dim + i) = sum / (2 * chol(j, j));
+                }
+            }
+        }
+    }
 }

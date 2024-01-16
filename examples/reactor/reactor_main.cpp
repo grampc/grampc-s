@@ -11,25 +11,19 @@ using namespace grampc;
 int main()
 {
      // Parameter for the propagation methods
-    typeInt MC_numPoints = 100;
-    RandomNumberGenerator rng = RandomNumberGenerator(1);
-    typeRNum UT_alpha = 0.1;
-    typeRNum UT_beta = 2.0;
-    typeRNum UT_kappa = 0;
+    typeInt numberOfPoints = 100;
+    RandomNumberGenerator rng = RandomNumberGenerator(0);
 
-    // State  and parameter distribution
+    // Initial state mean and covariacne 
     Vector x0(2);
-    x0 << 0.708, 0.09;
-    DistributionPtr state = Gaussian(x0, 1e-3 * Matrix::Identity(2, 2));
-    MultiDistributionPtr param = MultiDist({Gaussian(0.0, 1e-6)});
+    Matrix P0(2,2);
+    x0 << 0.8, 0.08;
+    P0 << 1e-3, 0, 0, 1e-4;
+
+    DistributionPtr state = Gaussian(x0, P0);
 
     // Point transformation that can be used for the uncertainty propagation
-    PointTransformationPtr transform = UT(state->dimension() + param->dimension(), UT_alpha, UT_beta, UT_kappa, {1, 1, 0});
-    // PointTransformationPtr transform = StirlingFirstOrder(state->dimension() + param->dimension(), 1, {1, 1, 0});
-    // PointTransformationPtr transform = StirlingSecondOrder(state->dimension() + param->dimension(), 1, {1, 1, 0});
-    // PointTransformationPtr transform = MonteCarlo(state->dimension() + param->dimension(), MC_numPoints, rng);
-    // PointTransformationPtr transform = Quadrature(MultiDist({state, param})->polynomialFamily(), {1, 1, 0});
-    // PointTransformationPtr transform = PCE(MultiDist({state, param})->polynomialFamily(), 2, {1, 1, 0});
+    PointTransformationPtr transform = MonteCarlo(state->dimension(), state->dimension(), numberOfPoints, rng);
 
     // Prediction horizon, sampling time, and initial time
     typeRNum Thor = 0.1;
@@ -40,7 +34,7 @@ int main()
     std::vector<typeRNum> udes = {19.6};
 
     // Input constraints
-    std::vector<typeRNum> umax = {400};
+    std::vector<typeRNum> umax = {100};
     std::vector<typeRNum> umin = {10};
 
     // Declaration of vectors for the problem description
@@ -50,7 +44,7 @@ int main()
 
     // Initial input and tolerance of the constraints
     std::vector<typeRNum> u0 = {19.6};
-    std::vector<typeRNum> constraintsAbsTol = {1e-6};
+    std::vector<typeRNum> constraintsAbsTol = {1e-4};
 
     // System parameters
     pSys.push_back(50);
@@ -62,40 +56,30 @@ int main()
     pCost.push_back(1.0); // Coefficient for (x2-x2_Des)^2
 
     // End cost P
-    pCost.push_back(1.0); // Coefficient for (x1-x1_Des)^2
-    pCost.push_back(1.0); // Coefficient for (x2-x2_Des)^2
+    pCost.push_back(0.0); // Coefficient for (x1-x1_Des)^2
+    pCost.push_back(0.0); // Coefficient for (x2-x2_Des)^2
 
     // Input cost R
-    pCost.push_back(0.1); // Coefficient for (u-u_Des)^2
+    pCost.push_back(1); // Coefficient for (u-u_Des)^2
 
     // Constraint parameters
     pCon.push_back(0.14);
-
-    // Chance constraint probability
-    Vector vec_chance_constraint(1);
-    vec_chance_constraint << 0.9;
-
-    // Chance constraint approximation
-    // ChebyshevConstraintApproximation constraintApprox(&vec_chance_constraint);
-    ChanceConstraintApproximationPtr constraintApprox = GaussianApprox(vec_chance_constraint);
-    // SymmetricConstraintApproximation constraintApprox(&vec_chance_constraint);
 
     // create nominal problem description
     StochasticProblemDescriptionPtr reactor_problem = StochasticProblemDescriptionPtr(new ReactorProblemDescription(pSys, pCost, pCon));
 
     // configure stochastic problem description
-    grampc::SigmaPointProblemDescription problem(reactor_problem, constraintApprox, transform);
-    // grampc::MonteCarloProblemDescription problem(reactor_problem, constraintApprox, transform);
+    grampc::MonteCarloProblemDescription problem(reactor_problem, transform);
 
     // create solver
     grampc::Grampc solver(&problem);
     const typeGRAMPCparam *par = solver.getParameters();
 
     // set initial states and parameters depending on the propagation method
-    problem.compute_x0_and_p0(state, param);
+    problem.compute_x0_and_p0(state);
     solver.setparam_real_vector("x0", problem.x0());
-    solver.setparam_real_vector("p0", problem.p0());
 
+    // resize vector
     xdes.resize(par->Nx, 0.0);
     constraintsAbsTol.resize(par->Nc, 0.0);
 
@@ -110,10 +94,10 @@ int main()
 
     // set options
     solver.setopt_int("MaxGradIter", 3);
-    solver.setopt_int("MaxMultIter", 2);
-    solver.setopt_int("Nhor", 20);
+    solver.setopt_int("MaxMultIter", 5);
+    solver.setopt_int("Nhor", 30);
     solver.setopt_string("Integrator", "heun");
-    solver.setopt_real("PenaltyMin", 3e7);
+    solver.setopt_real("PenaltyMin", 1e11);
     solver.setopt_real_vector("ConstraintsAbsTol", &constraintsAbsTol[0]);
     solver.setopt_string("InequalityConstraints", "on");
     solver.setopt_string("EqualityConstraints", "off");
@@ -146,7 +130,6 @@ int main()
     dimOut << "VariableName,Data" << std::endl;
     dimOut << "Nx," << state->dimension() << std::endl;
     dimOut << "Nu," << u0.size() << std::endl;
-    dimOut << "Np," << param->dimension() << std::endl;
     dimOut << "Nh," << solver.getParameters()->Nh;
 
     typeRNum tempConstraint[Nc];

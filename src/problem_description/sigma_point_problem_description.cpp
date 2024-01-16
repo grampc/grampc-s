@@ -2,7 +2,6 @@
 
 namespace grampc
 {
-
     SigmaPointProblemDescription::SigmaPointProblemDescription(StochasticProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,
                                  PointTransformationPtr pointTransformation)
         : numSigmaPoints_(pointTransformation->numberOfPoints()),
@@ -10,10 +9,10 @@ namespace grampc
           pointTransformation_(pointTransformation),
           constraintTighteningCoeff_(constraintApproximation->tighteningCoefficient())
     {
-        typeInt Ng, NgT, NhT;
+        typeInt Ng, NgT;
 
         // Call ocp_dim to get the number of states, controls, parameters, and constraints
-        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, &Ng, &numConstraints_, &NgT, &NhT); 
+        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, &Ng, &numConstraints_, &NgT, &numTerminalConstraints_); 
 
         // Distribution of states and parameters
         stateAndParam_ = MultiDist({Dist(numStates_), Dist(numParams_)});
@@ -25,20 +24,23 @@ namespace grampc
         temp_vec_numInputs_ = Vector::Zero(numControlInputs_);
         temp_vec_numParams_ = Vector::Zero(numParams_);
         temp_vec_numSigmaPoints_ = RowVector::Zero(numSigmaPoints_);
-        dvar_dpoints_ = Vector::Zero(numConstraints_ * numSigmaPoints_);
         constraintMatrix_ = Matrix::Zero(numConstraints_, numSigmaPoints_);
         constraintStdDev_ = Vector::Zero(numConstraints_);
         constraintVec_ = Matrix::Zero(numConstraints_, numSigmaPoints_);
-        dmean_dPoints_ = pointTransformation_->dmean1D_dpoints().transpose();
+        terminalConstraintMatrix_ = Matrix::Zero(numTerminalConstraints_, numSigmaPoints_);
+        terminalConstraintStdDev_ = Vector::Zero(numTerminalConstraints_);
+        terminalConstraintVec_ = Matrix::Zero(numTerminalConstraints_, numSigmaPoints_);
+        dmean_dPoints_ = pointTransformation_->dmean1D_dpoints().transpose();        
     }
 
     void SigmaPointProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
     {
-        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, Ng, &numConstraints_, NgT, NhT);
+        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, Ng, &numConstraints_, NgT, &numTerminalConstraints_);
         *Nx = numSigmaPoints_ * numStates_;
         *Np = numSigmaPoints_ * numParams_;
         *Nu = numControlInputs_;
         *Nh = numConstraints_;
+        *NhT = numTerminalConstraints_;
     }
 
     void SigmaPointProblemDescription::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
@@ -48,8 +50,6 @@ namespace grampc
         {
            problemDescription_->ffct(out + i * numStates_, t, x + i * numStates_, u, p + i * numParams_);
         }
-        // NOTE: diffusion of the samples (Wiener process noise) is only possible for discrete-time systems
-        // or with a dedicated integrator (Euler-Maruyama integration) since the noise is not differentiable
     }
 
     void SigmaPointProblemDescription::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *adj, ctypeRNum *u, ctypeRNum *p)
@@ -144,6 +144,20 @@ namespace grampc
         }
     }
 
+    void SigmaPointProblemDescription::dVdT(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    {
+        // dVdT of the first sigma point
+        problemDescription_->dVdT(out, t, x, p, xdes);
+        out[0] *= dmean_dPoints_(0);
+        
+        // Add dVdT of the remaining sigma points
+        for (int i = 1; i < numSigmaPoints_; ++i)
+        {
+            problemDescription_->dVdT(&tempScalar_, t, x + i * numStates_, p + i * numParams_, xdes);
+            out[0] += tempScalar_ * dmean_dPoints_(i);
+        }
+    }
+
     void SigmaPointProblemDescription::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
     {
         // Evaluate constraints for each sigma point
@@ -165,15 +179,15 @@ namespace grampc
 
     void SigmaPointProblemDescription::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
     {   
-        // Compute the vector vec for the derivatieves of the constraints
+        // Compute the derivative of the tightened constraint with respect to the constraints of the sigma points
         for(typeInt i = 0; i < numConstraints_; ++i)
         {
-        constraintVec_.row(i) = (dmean_dPoints_ + pointTransformation_->dvar_dpoints(constraintMatrix_.row(i)).transpose() * constraintTighteningCoeff_(i) / 2.0 / std::max(stdDevMin_, constraintStdDev_(i))) * vec[i];
+            constraintVec_.row(i) = (dmean_dPoints_ + pointTransformation_->dvar_dpoints(constraintMatrix_.row(i)).transpose() * constraintTighteningCoeff_(i) / 2.0 / std::max(stdDevMin_, constraintStdDev_(i))) * vec[i];
         }
 
+        // Derivative of the tightened constraints with respect to the states
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            // Derivative of the constraint
             problemDescription_->dhdx_vec(out + i * numStates_, t, x + i * numStates_, u, p + i * numParams_, constraintVec_.col(i).data());
         } 
     }
@@ -190,6 +204,53 @@ namespace grampc
             // Derivative of the constraint
             problemDescription_->dhdu_vec(temp_vec_numInputs_.data(), t, x + i * numStates_, u, p + i * numParams_, constraintVec_.col(i).data());
             outMap += temp_vec_numInputs_;
+        }
+    }
+
+    void SigmaPointProblemDescription::hTfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p)
+    {
+        // Evaluate the terminal constraints for each sigma point
+        for (typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            problemDescription_->hTfct(terminalConstraintMatrix_.data() + i * numTerminalConstraints_, t, x + i * numStates_, p + i * numParams_);
+        }
+            
+        // Compute tightened constraints
+        for(typeInt i = 0; i < numTerminalConstraints_; ++i)
+        {
+            // Compute the standard deviation of the terminal constraints
+            terminalConstraintStdDev_(i) = std::sqrt(pointTransformation_->variance(terminalConstraintMatrix_.row(i)));
+
+            // Tightened constraint
+            out[i] = pointTransformation_->mean1D(terminalConstraintMatrix_.row(i)) + constraintTighteningCoeff_(numConstraints_ + i) * terminalConstraintStdDev_(i);
+        }
+    }
+
+    void SigmaPointProblemDescription::dhTdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec)
+    {
+        // Compute the derivative of the tightened constraint with respect to the terminal constraints of the sigma points
+        for(typeInt i = 0; i < numTerminalConstraints_; ++i)
+        {
+            terminalConstraintVec_.row(i) = (dmean_dPoints_ + pointTransformation_->dvar_dpoints(terminalConstraintMatrix_.row(i)).transpose() * constraintTighteningCoeff_(numConstraints_ + i) / 2.0 / std::max(stdDevMin_, terminalConstraintStdDev_(i))) * vec[i];
+        }
+
+        // Derivative of the tightened constraints with respect to the states
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            problemDescription_->dhTdx_vec(out + i * numStates_, t, x + i * numStates_, p + i * numParams_, terminalConstraintVec_.col(i).data());
+        } 
+    }
+
+    void SigmaPointProblemDescription::dhTdT_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec)
+    {
+        out[0] = 0.0;
+
+        // terminalConstraintVec_ is computed and saved in dhTdx_vec
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            // Derivative of the constraint
+            problemDescription_->dhTdT_vec(&tempScalar_, t, x + i * numStates_, p + i * numParams_, terminalConstraintVec_.col(i).data());
+            out[0] += tempScalar_;
         }
     }
 

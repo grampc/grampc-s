@@ -2,7 +2,7 @@ clear all; close all; clc;
 directory = '../../bin/';
 
 % Plot trajectories of these states
-plotState = 1:6;
+plotState = 5;
 
 % load data
 vec.t = load([directory 'tvec.txt']);

@@ -12,10 +12,13 @@ namespace grampc
     {
     public:
         // Constructor for Monte-Carlo simulations with a fixed number of points
-        MonteCarloTransformation(typeInt dim, typeInt numberOfPoints, const RandomNumberGenerator& rng);
+        MonteCarloTransformation(typeInt dimX, typeInt dimY, typeInt numberOfPoints, const RandomNumberGenerator& rng);
 
         // Get points that represent a distribution
         virtual const Matrix& points(DistributionConstPtr dist) override;
+
+        // Get previously generated points
+        virtual const Matrix& points() override;
 
         // Compute the mean of the distribution
         virtual const Vector& mean(MatrixConstRef points) override;
@@ -23,20 +26,14 @@ namespace grampc
          // Compute the mean of the one-dimensional distribution
         virtual typeRNum mean1D(RowVectorConstRef points) override;
 
-        // Compute the covariance matrix of the distribution
-        virtual const Matrix& covariance(MatrixConstRef points) override;
+        // Compute the cross-covariance matrix of the random vectors x and y 
+        virtual const Matrix& covariance(MatrixConstRef pointsX, MatrixConstRef pointsY) override;
 
         // Compute the variance of the one-dimensional distribution
         virtual typeRNum variance(RowVectorConstRef points) override;
 
-        // Jacobian dmean/dpoints multiplied by vector vec, i.e. (dmean/dpoints)^T*vec
-        virtual const Vector& dmean_dpoints_vec(VectorConstRef vec) override;
-
         // dmean/dpoints multiplied by vector vec, i.e. (dmean/dpoints)^T*vec for a one-dimensional distribution
         virtual const Vector& dmean1D_dpoints() override;
-
-        // Jacobian dcovariance/dpoints multiplied by vector vec, i.e. (d(vector(covariance))/dpoints)^T*vec
-        virtual const Vector& dcov_dpoints_vec(MatrixConstRef points, VectorConstRef vec) override;
 
         // Jacobian dvariance/dpoints multiplied by vector vec, i.e. (d(vector(covariance))/dpoints)^T*vec for a one-dimensional distribution
         virtual const Vector& dvar_dpoints(RowVectorConstRef points) override;
@@ -45,26 +42,24 @@ namespace grampc
         virtual typeInt numberOfPoints() const override;
     
     private:
+        typeInt dimX_;
+        typeInt dimY_;
         RandomNumberGenerator rng_;
         typeInt numberOfPoints_;
-        typeInt dim_;
         Matrix points_;
-        Vector mean_;
+        Vector meanX_;
+        Vector meanY_;
         Matrix covariance_;
-        Vector dmean_dpoints_vec_;
         Vector dmean1D_dpoints_;
-        Vector dcov_dpoints_vec_;
         Vector dvar_dpoints_;
         typeRNum weight_;
-        Matrix diffToMean_;
+        Matrix diffToMeanX_;
+        Matrix diffToMeanY_;
         RowVector diffToMean1D_;
-        Matrix dcov_;
-        Matrix diffToMean_jk_dx_;
-        Matrix diffToMean_ik_dx_;
         typeRNum tempScalar;
     };
 
-    PointTransformationPtr MonteCarlo(typeInt dim, typeInt numberOfPoints, const RandomNumberGenerator& rng);
+    PointTransformationPtr MonteCarlo(typeInt dimX, typeInt dimY, typeInt numberOfPoints, const RandomNumberGenerator& rng);
 }
 
 #endif // MONTE_CARLO_POINT_GENERATOR_HPP

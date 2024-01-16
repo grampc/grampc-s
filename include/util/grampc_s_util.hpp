@@ -19,6 +19,8 @@ namespace grampc
 
     // Return the quadrature rule that corresponds to the distribution
     PolynomialGeneratorPtr correspondingPolynomialGenerator(PolynomialFamily polyFam, typeInt maxOrder);
+
+    void deriveCholesky(VectorRef out, MatrixConstRef chol, typeInt k, typeInt l);
   }
 
 #endif // GRAMPC_S_UTIL_HPP

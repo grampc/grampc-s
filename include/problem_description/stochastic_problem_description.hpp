@@ -169,6 +169,15 @@ namespace grampc
 
         /** Jacobian d(dh/dx)/du in vector form **/
         virtual void dhdxdu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p) {}
+
+		/** Jacobian dhT/dx in vector form  **/
+        virtual void dhTdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p) {}
+
+		/** Hessian d(dhT/dx)/dx in vector form  **/
+        virtual void dhTdxdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p) {}
+
+		/** Hessian d(dhT/dx)/dT in vector form  **/
+        virtual void dhTdxdT(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p) {}
     };
     
     // Alias

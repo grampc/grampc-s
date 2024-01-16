@@ -18,8 +18,7 @@ T = vec.t(end);
 % dimensions
 vec.Nx = vec.dim.Data(1);
 vec.Nu = vec.dim.Data(2);
-vec.Np = vec.dim.Data(3);
-vec.Nh = vec.dim.Data(4);
+vec.Nh = vec.dim.Data(3);
 
 % state mean
 vec.mean = zeros(length(vec.t), vec.Nx);

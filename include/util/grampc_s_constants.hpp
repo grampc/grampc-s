@@ -19,14 +19,17 @@ namespace grampc
 
     typedef Eigen::Matrix<typeRNum, Eigen::Dynamic, Eigen::Dynamic> Matrix;
     typedef Eigen::Matrix<typeRNum, Eigen::Dynamic, 1> Vector;
+    typedef Eigen::Matrix<typeInt, Eigen::Dynamic, 1> IntVector;
     typedef Eigen::Matrix<typeRNum, 1, Eigen::Dynamic> RowVector;
     typedef Eigen::DiagonalMatrix<typeRNum, Eigen::Dynamic> DiagonalMatrix;
     
     typedef Eigen::Ref<Matrix> MatrixRef;
     typedef Eigen::Ref<Vector> VectorRef;
+    typedef Eigen::Ref<IntVector> IntVectorRef;
     typedef Eigen::Ref<RowVector, 0, Eigen::InnerStride<>> RowVectorRef;
     typedef const Eigen::Ref<const Matrix>& MatrixConstRef;
     typedef const Eigen::Ref<const Vector>& VectorConstRef;
+    typedef const Eigen::Ref<const IntVector>& IntVectorConstRef;
     typedef const Eigen::Ref<const RowVector, 0, Eigen::InnerStride<>>& RowVectorConstRef;
 
 

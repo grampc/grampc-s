@@ -13,16 +13,22 @@ namespace grampc
     {
     public:
         // Constructor using an Eigen vector
-        ComposedQuadrature(const std::vector<PolynomialFamily>& polyFamily, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder);
+        ComposedQuadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder);
 
         // Constructor using a std vector
-        ComposedQuadrature(const std::vector<PolynomialFamily>& polyFamily, const std::vector<typeInt>& quadratureOrder);
+        ComposedQuadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, const std::vector<typeInt>& quadratureOrder);
 
         // Constructor with identical quadrature order for all dimensions
-        ComposedQuadrature(const std::vector<PolynomialFamily>& polyFamily, typeInt quadratureOrder);
+        ComposedQuadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt quadratureOrder);
 
         // Get points that represent a distribution
         virtual const Matrix& points(DistributionConstPtr dist) override;
+
+        // Get points that represent a distribution with specified mean and Cholesky decomposition of the covariance matrix
+        virtual const Matrix& points(VectorConstRef mean, MatrixConstRef covCholesky) override;
+
+        // Get previously generated points
+        virtual const Matrix& points() override;
 
         // Compute the mean of the distribution
         virtual const Vector& mean(MatrixConstRef points) override;
@@ -30,20 +36,14 @@ namespace grampc
          // Compute the mean of the one-dimensional distribution
         virtual typeRNum mean1D(RowVectorConstRef points) override;
 
-        // Compute the covariance matrix of the distribution
-        virtual const Matrix& covariance(MatrixConstRef points) override;
+        // Compute the cross-covariance matrix of the random vectors x and y 
+        virtual const Matrix& covariance(MatrixConstRef pointsX, MatrixConstRef pointsY) override;
 
         // Compute the variance of the one-dimensional distribution
         virtual typeRNum variance(RowVectorConstRef points) override;
 
-        // Jacobian dmean/dpoints multiplied by vector vec, i.e. (dmean/dpoints)^T*vec
-        virtual const Vector& dmean_dpoints_vec(VectorConstRef vec) override;
-
         // dmean/dpoints multiplied by vector vec, i.e. (dmean/dpoints)^T*vec for a one-dimensional distribution
         virtual const Vector& dmean1D_dpoints() override;
-
-        // Jacobian dcovariance/dpoints multiplied by vector vec, i.e. (d(vector(covariance))/dpoints)^T*vec
-        virtual const Vector& dcov_dpoints_vec(MatrixConstRef points, VectorConstRef vec) override;
 
         // Jacobian dvariance/dpoints multiplied by vector vec, i.e. (d(vector(covariance))/dpoints)^T*vec for a one-dimensional distribution
         virtual const Vector& dvar_dpoints(RowVectorConstRef points) override;
@@ -61,29 +61,26 @@ namespace grampc
         const Matrix& normalizedPoints();
 
     private:
-        typeInt dim_;
+        typeInt dimX_;
+        typeInt dimY_;
         typeInt numPoints_;
         Matrix normalizedPoints_;
         Matrix points_;
         Matrix roots_;
-        Vector mean_;
+        Vector meanX_;
+        Vector meanY_;
         Matrix covariance_;
-        Matrix covariance_temp_;
         Vector weights_;
-        Vector dmean_dpoints_vec_;
-        Vector dcov_dpoints_vec_;
         Vector dvar_dpoints_;
-        Matrix diffToMean_;
+        Matrix diffToMeanX_;
+        Matrix diffToMeanY_;
         RowVector diffToMean1D_;
-        Matrix dcov_;
-        Matrix diffToMean_jk_dx_;
-        Matrix diffToMean_ik_dx_;
         typeRNum tempScalar;
     };   
 
-    PointTransformationPtr Quadrature(const std::vector<PolynomialFamily>& polyFamily, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder);
-    PointTransformationPtr Quadrature(const std::vector<PolynomialFamily>& polyFamily, const std::vector<typeInt>& quadratureOrder);
-    PointTransformationPtr Quadrature(const std::vector<PolynomialFamily>& polyFamily, typeInt quadratureOrder);
+    PointTransformationPtr Quadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder);
+    PointTransformationPtr Quadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, const std::vector<typeInt>& quadratureOrder);
+    PointTransformationPtr Quadrature(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt quadratureOrder);
 }
 
 #endif // COMPOSED_QUADRATURE_HPP
