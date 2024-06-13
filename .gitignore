@@ -1,0 +1,38 @@
+# This file is part of GRAMPC-S - (https://github.com/grampc/grampc-s)
+#
+# GRAMPC-S -- A software framework for stochastic model predictive control (SMPC)
+#
+# Copyright 2024 Daniel Landgraf, Andreas Voelz, Knut Graichen.
+# All rights reserved.
+#
+# GRAMPC-S is distributed under the BSD-3-Clause license, see LICENSE.txt
+
+bin/
+build/
+
+*.cflags
+*.config
+*.creator
+*.creator.user
+*.cxxflags
+*.files
+*.includes
+*.asv
+*.dll
+*.xml
+*.json
+*.exe
+*.slxc
+*.mexw64
+*.png
+*.fig
+*.original
+*.a
+*.cmake
+*.log
+*.aux
+*.pdf
+*.gz
+*.bbl
+*.glg
+*.fig
