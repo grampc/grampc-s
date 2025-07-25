@@ -1,6 +1,8 @@
 # GRAMPC-S
 GRAMPC-S is a framework for nonlinear stochastic model predictive control based on [GRAMPC](https://github.com/grampc/grampc). The implementation in C++ and the fast solver allow sampling times in the (sub)millisecond range. A manual of GRAMPC-S is provided in the folder [documentation](documentation/manual.pdf).
 
+More details about the algorithm and its performance can be found in the corresponding article published in Optimization and Engeneering. The article is available online under open access at: https://doi.org/10.1007/s11081-025-10006-z. Please cite the paper when you are using results obtained with GRAMPC-S.
+
 ## Features
 The most important features are listed below. For a more detailed description of the features, please refer to the [documentation](documentation/manual.pdf).
 - Approximation of a stochastic optimal control problem by a deterministic optimal control problem that can be solved by [GRAMPC](https://github.com/grampc/grampc),
