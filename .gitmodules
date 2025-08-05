@@ -1,0 +1,3 @@
+[submodule "libs/grampc"]
+	path = libs/grampc
+	url = https://github.com/grampc/grampc.git
