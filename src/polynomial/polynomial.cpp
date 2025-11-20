@@ -21,7 +21,7 @@ namespace grampc
     }
 
     Polynomial::Polynomial(const Vector& coefficients)
-        : numCoefficients_(coefficients.size()),
+        : numCoefficients_((typeInt) coefficients.size()),
           coefficients_(coefficients)
     {
     }
@@ -81,10 +81,10 @@ namespace grampc
         // Increase the number of coefficients if required
         if (numCoeffDiff > 0)
         {
-            typeInt elementsOld = coefficients_.rows();
+            typeInt elementsOld = (typeInt) coefficients_.rows();
             coefficients_.conservativeResize(elementsOld + numCoeffDiff);
             coefficients_.segment(elementsOld, numCoeffDiff) = Vector::Zero(numCoeffDiff);
-            numCoefficients_ = coefficients_.size();
+            numCoefficients_ = (typeInt) coefficients_.size();
         }
 
         // Add the coefficients
@@ -102,10 +102,10 @@ namespace grampc
         // Increase the number of coefficients if required
         if (numCoeffDiff > 0)
         {
-            typeInt elementsOld = coefficients_.rows();
+            typeInt elementsOld = (typeInt) coefficients_.rows();
             coefficients_.conservativeResize(elementsOld + numCoeffDiff);
             coefficients_.segment(elementsOld, numCoeffDiff) = Vector::Zero(numCoeffDiff);
-            numCoefficients_ = coefficients_.size();
+            numCoefficients_ = (typeInt) coefficients_.size();
         }
 
         // Add the coefficients
@@ -129,7 +129,7 @@ namespace grampc
 
         // Set Coefficients
         coefficients_ = tempCoef;
-        numCoefficients_ = coefficients_.size();
+        numCoefficients_ = (typeInt) coefficients_.size();
     }
 
     void Polynomial::multiplyScalar(const typeRNum factor)
@@ -140,7 +140,7 @@ namespace grampc
     void Polynomial::setCoefficients(const Vector& coefficients)
     {
         coefficients_ = coefficients;
-        numCoefficients_ = coefficients_.size();
+        numCoefficients_ = (typeInt) coefficients_.size();
     }
 
     const Vector& Polynomial::getCoefficients() const

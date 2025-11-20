@@ -80,6 +80,6 @@ namespace grampc
 
     typeInt LegendrePolynomialGenerator::getMaximumOrder() const
     {
-        return legendrePolynomials.size() - 1;
+        return (typeInt) legendrePolynomials.size() - 1;
     }
 }

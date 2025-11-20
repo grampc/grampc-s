@@ -24,7 +24,7 @@ namespace grampc
     }
 
      Distribution::Distribution(VectorConstRef mean, MatrixConstRef covariance, const std::vector<PolynomialFamily>& poly)
-        : dim_(mean.rows()),
+        : dim_((typeInt) mean.rows()),
           mean_(mean),
           cov_(covariance),
           covChol_(dim_, dim_),
@@ -35,7 +35,7 @@ namespace grampc
     }
 
     Distribution::Distribution(VectorConstRef mean, MatrixConstRef covariance, MatrixConstRef covChol,  const std::vector<PolynomialFamily>& poly)
-        : dim_(mean.rows()),
+        : dim_((typeInt) mean.rows()),
           mean_(mean),
           cov_(covariance),
           covChol_(covChol),

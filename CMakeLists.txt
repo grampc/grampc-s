@@ -28,7 +28,6 @@ find_package(Eigen3 3.4.90 REQUIRED NO_MODULE)
 include_directories(
 	include
 	libs/grampc/include
-	${EIGEN3_INCLUDE_DIR}
 )
 
 # Add library and link Eigen

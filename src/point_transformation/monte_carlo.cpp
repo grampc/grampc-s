@@ -79,8 +79,8 @@ namespace grampc
 
     void MonteCarloTransformation::covarianceMatrix(MatrixRef out, MatrixConstRef points)
     {
-        typeInt dim = points.rows();
-        typeInt numPoints = points.cols();
+        typeInt dim = (typeInt) points.rows();
+        typeInt numPoints = (typeInt) points.cols();
 
         // Compute mean of points
         Vector mean = points.rowwise().mean();

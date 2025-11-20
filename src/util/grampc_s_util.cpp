@@ -75,7 +75,7 @@ namespace grampc
     void deriveCholesky(VectorRef out, MatrixConstRef chol, typeInt k, typeInt l)
     {
         typeRNum sum;
-        typeInt dim = chol.rows();
+        typeInt dim = (typeInt) chol.rows();
 
         for (typeInt i = 0; i < dim; i++)
         {
@@ -101,7 +101,6 @@ namespace grampc
     void writeTrajectoriesToFile(GrampcPtr solver, typeInt numberOfStates)
     {
         const typeGRAMPCparam *par = solver->getParameters();
-        typeRNum tempConstraint[par->Nh];
 
         // open output files
         std::ofstream tout("tvec.txt");

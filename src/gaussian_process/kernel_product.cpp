@@ -30,7 +30,7 @@ namespace grampc
 
     void KernelProduct::gradient(VectorRef out, VectorConstRef tauEval, IntVectorConstRef derivativeIndices) const
     {
-        typeInt numDerivatives = derivativeIndices.rows();
+        typeInt numDerivatives = (typeInt) derivativeIndices.rows();
 
         // dk/dx = dk1/dx * k2 + k1 * dk2/dx 
         kernel1_->gradient(temp_vec_dimInput_, tauEval, derivativeIndices);

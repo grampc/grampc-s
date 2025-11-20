@@ -32,7 +32,7 @@ namespace grampc
         probabilities_ = probabilities;
 
         // Number of constraints
-        typeInt numConstraints = probabilities_.rows();
+        typeInt numConstraints = (typeInt) probabilities_.rows();
 
         // Resize coefficients
         coefficients_.resize(numConstraints);

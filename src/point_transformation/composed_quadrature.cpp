@@ -75,7 +75,7 @@ namespace grampc
             // Add points and update weights
             for(typeInt j = 0; j < numOutputPoints; ++j)
             {
-                index = std::floor((j % numComb) / (numComb / numUnivariateQuadPoints[i]));
+                index = (typeInt) std::floor((j % numComb) / (numComb / numUnivariateQuadPoints[i]));
                 roots_(i, j) = roots(index);
                 normalizedPoints_(i, j) = normalizedPoints(index);
                 weights_(j) *= weights(index);

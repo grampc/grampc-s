@@ -17,10 +17,10 @@ namespace grampc
     PCE_Transformation::PCE_Transformation(typeInt dimX, typeInt dimY, const std::vector<PolynomialFamily>& polyFamily, typeInt maxPolyOrder, const Eigen::Ref<const Eigen::Vector<typeInt, Eigen::Dynamic>>& quadratureOrder)
     : dimX_(dimX),
       dimY_(dimY),
-      dimUncertain_((quadratureOrder.array() > 1).count()),
+      dimUncertain_((typeInt) (quadratureOrder.array() > 1).count()),
       numPoints_(quadratureOrder.prod()),
       maxPolyOrder_(maxPolyOrder),
-      numPolynomials_(factorial(dimUncertain_ + maxPolyOrder_) / factorial(dimUncertain_) / factorial(maxPolyOrder_)),
+      numPolynomials_((typeInt) (factorial(dimUncertain_ + maxPolyOrder_) / factorial(dimUncertain_) / factorial(maxPolyOrder_))),
       normalizedPoints_(dimX_, numPoints_),
       points_(dimX_, numPoints_),
       PCE_coefficients_mean_(dimY_),

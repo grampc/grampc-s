@@ -20,7 +20,7 @@ namespace grampc
       kappa_(kappa),
       dimX_(dimX),
       dimY_(dimY),
-      numUncertainVariables_(std::count(considerUncertain.begin(), considerUncertain.end(), true)),
+      numUncertainVariables_((typeInt) std::count(considerUncertain.begin(), considerUncertain.end(), true)),
       numPoints_(2*numUncertainVariables_ + 1),
       normalizedPoints_(dimX_, numPoints_),
       points_(dimX_, numPoints_),

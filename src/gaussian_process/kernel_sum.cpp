@@ -17,7 +17,7 @@ namespace grampc
     KernelSum::KernelSum(const std::vector<StationaryKernelPtr>& kernels)
     : dimInput_(kernels[0]->inputDimension()),
       kernels_(kernels),
-      numKernels_(kernels.size()),
+      numKernels_((typeInt) kernels.size()),
       temp_vec_dimInput_(dimInput_)
     {
         // Input variables of all kernels must be the same!
@@ -37,7 +37,7 @@ namespace grampc
     void KernelSum::gradient(VectorRef out, VectorConstRef tauEval, IntVectorConstRef derivativeIndices) const
     {
         out.setZero();
-        typeInt numDerivatives = derivativeIndices.rows();
+        typeInt numDerivatives = (typeInt) derivativeIndices.rows();
 
         for (typeInt i = 0; i < numKernels_; ++i)
         {

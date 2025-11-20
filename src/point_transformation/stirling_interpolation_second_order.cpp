@@ -19,7 +19,7 @@ namespace grampc
       dimY_(dimY),
       stepSize_(stepSize),
       stepSizeSquared_(stepSize*stepSize),
-      numUncertainVariables_(std::count(considerUncertain.begin(), considerUncertain.end(), true)),
+      numUncertainVariables_((typeInt) std::count(considerUncertain.begin(), considerUncertain.end(), true)),
       numPoints_(2*numUncertainVariables_ + 1),
       normalizedPoints_(dimX, numPoints_),
       points_(dimX, numPoints_),

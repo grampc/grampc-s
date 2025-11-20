@@ -16,7 +16,7 @@ namespace grampc
 {
     MultivariatePolynomial::MultivariatePolynomial(const std::vector<PolynomialConstPtr>& univariatePolynomials, const std::vector<typeRNum>& univariateSquaredNorm)
         : polynomials_(univariatePolynomials),
-          numVariables_(univariatePolynomials.size()),
+          numVariables_((typeInt) univariatePolynomials.size()),
           squaredNorm_(1.0)
     {
         // Compute squared norm
@@ -40,7 +40,7 @@ namespace grampc
     void MultivariatePolynomial::setPolynomials(std::vector<PolynomialConstPtr>& univariatePolynomials, std::vector<typeRNum>& univariateSquaredNorm)
     {
         polynomials_ = univariatePolynomials;
-        numVariables_ = polynomials_.size();
+        numVariables_ = (typeInt) polynomials_.size();
 
         // Compute squared norm
         squaredNorm_ = 1.0;

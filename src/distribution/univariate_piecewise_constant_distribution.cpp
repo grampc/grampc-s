@@ -22,7 +22,7 @@ namespace grampc
           intervalProbabilityDensity_(intervalProbabilityDensity),
           weights_(intervalProbabilityDensity.size()),
           sample_(dim_),
-          numIntervals_(intervalProbabilityDensity_.size())
+          numIntervals_((typeInt) intervalProbabilityDensity_.size())
     {
         // Compute weights
         for(typeInt i = 0; i < intervalProbabilityDensity_.size(); ++i)
@@ -43,7 +43,7 @@ namespace grampc
     typeRNum UnivariatePiecewiseConstantDistribution::mean(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity)
     {
         typeRNum out = 0.0;
-        typeInt numIntervals = intervalProbabilityDensity.size();
+        typeInt numIntervals = (typeInt) intervalProbabilityDensity.size();
 
         // Compute the mean of the distribution as E{X} = sum(w_i * E{U_i}), where U_i is the uniform distribution of one interval and w_i is its probability
         for(typeInt i = 0; i < numIntervals; ++i)
@@ -61,7 +61,7 @@ namespace grampc
         * For each interval with boundaries a and b: E{U_i^2} = Var{U_i} + E{U_i}^2 = 1/12 * (b-a)^2 + ((b+a)/2)^2 = 1/12 * (b-a)^2 + (b+a)^2 / 4
         ************************************************************************************************************************************************/
 
-        typeInt numIntervals = intervalProbabilityDensity.size();
+        typeInt numIntervals = (typeInt) intervalProbabilityDensity.size();
 
         // Vector of second moments E{U_i^2} of uniform distributions with boundaries a and b
         std::vector<typeRNum> secondMoments(numIntervals);
