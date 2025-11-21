@@ -1,0 +1,7 @@
+build/
+
+*.aux
+*.gz
+*.bbl
+*.fls
+*.fdb_latexmk

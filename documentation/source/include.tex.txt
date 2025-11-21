@@ -1,0 +1,11 @@
+\usepackage{sansmathfonts} % Serifenlose Schriftart für Mathe-Umgebungen
+\usepackage{amsmath}
+
+% Beispiel Mathe-Befehle
+\newcommand*{\vm}[1]{\boldsymbol{#1}} % Vektoren und Matrizen
+\newcommand*{\trans}{^{\mathrm{T}}} % Transponiert
+\newcommand*{\inv}{^{-1}} % Inverse
+\DeclareMathOperator*{\diag}{diag} % Diagonalmatrix
+\newcommand*{\gp}{\mathcal{GP}} % Gaußprozess
+\newcommand*{\ex}[1]{\mathds{E}\left[#1\right]} % Erwartungswert
+\newcommand*{\uBv}{\operatorname{u.\!B.\!v.}} % unter Berücksichtigung v

@@ -1,0 +1,55 @@
+\documentclass{standalone}
+
+\usepackage{sansmathfonts}
+\usepackage{dsfont}
+\renewcommand*\familydefault{\sfdefault}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+
+\begin{document}
+
+\begin{tikzpicture}
+    \begin{groupplot}[
+        group style={group size=2 by 2,
+            horizontal sep = 2.5cm, 
+            vertical sep = 1.5cm},
+         every axis y label/.style={font=\footnotesize,at={(ticklabel cs:0.5)},anchor=near ticklabel, rotate=90},
+         every axis x label/.style={font=\footnotesize,at={(ticklabel cs:0.5)},anchor=near ticklabel},
+         tick label style={font=\footnotesize},        
+		xticklabel style={
+        /pgf/number format/fixed,
+        /pgf/number format/precision=2
+		},
+		yticklabel style={
+        /pgf/number format/fixed,
+		},
+		scaled x ticks=false,
+		scaled y ticks=false,
+       	%xlabel = $y$,
+       	%ylabel = $p(y)$,
+       	%scaled ticks = false,
+        width = 7cm, % this is supposed to be total width (8cm) divided by number of columns (2) minus the sum of all the horizontal separations (1cm), i.e. 3 cm
+        height = 4cm, % same as above, but for the vertical
+        ]
+        \nextgroupplot[ylabel={Concentration $c_A$}, xlabel={Time $t$ in h},xmin=0,xmax=0.04,ymin=0.2,ymax=0.7, ytick={0,0.2,0.4, 0.6,0.8}]
+        \addplot [color=blue, thick]
+  			table[]{reactor_ca.tsv};
+        \nextgroupplot[ylabel={Concentration $c_B$}, xlabel={Time $t$ in h},xmin=0,xmax=0.04, ymin=0, ymax=0.152, ytick={0,0.05, 0.1, 0.15}]
+        \addplot [color=blue, thick]
+  			table[]{reactor_cb.tsv};
+  		\addplot [color=black, thick, dashed]
+  			table[row sep=crcr]
+  			{
+				0	0.14\\
+				0.1	0.14\\  			
+  			};
+        \nextgroupplot[ylabel={Control Input $u$}, xlabel={Time $t$ in h},xmin=0,xmax=0.04, ymin=18, ymax=24]
+        \addplot [color=blue, thick, smooth]
+  			table[]{reactor_u.tsv};
+        \nextgroupplot[ylabel={Cost $J$}, xlabel={Time $t$ in h}, xmin=0,xmax=0.04, ymin=0, ymax=0.14]
+        \addplot [color=blue, thick]
+  			table[]{reactor_cost.tsv};
+    \end{groupplot}
+\end{tikzpicture}
+
+\end{document}
