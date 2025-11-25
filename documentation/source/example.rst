@@ -76,7 +76,7 @@ Next, the cost function must be implemented in the function ``lfct``:
 
 .. code-block:: C++
 
-	void ReactorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         ctypeRNum *xdes = param->xdes;
         ctypeRNum *udes = param->udes;
@@ -160,7 +160,7 @@ Next, the approximation of the probabilistic constraint is determined by the Che
 
 .. code-block:: C++
 
-	Vector vec_chance_constraint(1);
+    Vector vec_chance_constraint(1);
     vec_chance_constraint << 0.95;
     ChanceConstraintApproximationPtr constraintApprox =  Chebyshev(vec_chance_constraint);
 

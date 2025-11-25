@@ -26,7 +26,7 @@ in the context of model predictive control. The functional of the expected cost 
 States and parameters are assumed to be random variables.
 
 The cost functional :math:`J\left( \vm u; \, \vm p, \, \vm x_0 \right)` is minimized subject to the system dynamics, probabilistic constraints, probabilistic terminal constraints, box constraints for :math:`\vm u` and :math:`T`, respectively.
-The system dynamics are given in the form of a stochastic differential equation in which :math:`\vm f` describes the part that is known, :math:`\vm g` is a Gaussian process approximation of unknown parts of the system dynamics, and :math:`\vm w` is a multidimensional Wiener process with constant diffusion term :math:`\vm \Sigma`.
+The system dynamics are given in the form of a continous-time stochastic differential equation in which :math:`\vm f` describes the part that is known, :math:`\vm g` is a Gaussian process approximation of unknown parts of the system dynamics, and :math:`\vm w` is a multidimensional Wiener process with constant diffusion term :math:`\vm \Sigma`.
 The Gaussian process approximation and the Wiener noise are optional components.
 If these are not specified, they are not taken into account in order to reduce the computation time.
 Based on the system dynamics, the states are predicted starting from the initial state :math:`\vm x_0`.
