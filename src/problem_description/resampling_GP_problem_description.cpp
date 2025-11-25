@@ -84,7 +84,7 @@ namespace grampc
         *NgT = 0;
     }
 
-    void ResamplingGPProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+    void ResamplingGPProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Mapping of the covariance output
         Eigen::Map<Matrix> d_cov(out.data() + numStates_, pointDim_, numStates_);
@@ -108,7 +108,7 @@ namespace grampc
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
             // Known dynamics
-            problemDescription_->ffct(pointsTransformed_.col(i), t, pointsInitial_.col(i), u, pointsInitial_.col(i).segment(numStates_, numParams_));
+            problemDescription_->ffct(pointsTransformed_.col(i), t, pointsInitial_.col(i), u, pointsInitial_.col(i).segment(numStates_, numParams_), param);
 
             // GP-dynamics
             index = 0;
@@ -136,7 +136,7 @@ namespace grampc
         }
     }
 
-    void ResamplingGPProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p)
+    void ResamplingGPProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
     {   
         typeInt index;
 
@@ -163,7 +163,7 @@ namespace grampc
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
             // Known dynamics
-            problemDescription_->ffct(pointsTransformed_.col(i), t, pointsInitial_.col(i), u, pointsInitial_.col(i).segment(numStates_, numParams_));
+            problemDescription_->ffct(pointsTransformed_.col(i), t, pointsInitial_.col(i), u, pointsInitial_.col(i).segment(numStates_, numParams_), param);
 
             // GP-dynamics
             index = 0;
@@ -177,8 +177,24 @@ namespace grampc
         const Vector& dmean_dpoints_vec = pointTransformation_->dmean_dpoints_vec(adj.segment(0, numStates_));
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dfdx_vec(temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_), t, pointsInitial_.col(i), dmean_dpoints_vec.segment(i*numStates_, numStates_), u , pointsInitial_.col(i).segment(numStates_, numParams_));
-            problemDescription_->dfdp_vec(temp_vec_pointDim_numPoints_.segment(i*pointDim_ + numStates_, numParams_), t, pointsInitial_.col(i), dmean_dpoints_vec.segment(i*numStates_, numStates_), u , pointsInitial_.col(i).segment(numStates_, numParams_));
+            problemDescription_->dfdx_vec(
+                temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_), 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_),
+                dmean_dpoints_vec.segment(i*numStates_, numStates_),
+                param
+            );
+            problemDescription_->dfdp_vec(
+                temp_vec_pointDim_numPoints_.segment(i*pointDim_ + numStates_, numParams_), 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_), 
+                dmean_dpoints_vec.segment(i*numStates_, numStates_),
+                param
+            );
         
             // GP-dynamics
             index = 0;
@@ -196,8 +212,24 @@ namespace grampc
         dcov_dPointsY_ = pointTransformation_->dcov_dpointsY_vec(pointsInitial_, adjCov);
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dfdx_vec(temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_), t, pointsInitial_.col(i), dcov_dPointsY_.segment(i*numStates_, numStates_), u ,  pointsInitial_.col(i).segment(numStates_, numParams_));
-            problemDescription_->dfdp_vec(temp_vec_pointDim_numPoints_.segment(i*pointDim_ + numStates_, numParams_), t, pointsInitial_.col(i), dcov_dPointsY_.segment(i*numStates_, numStates_), u , pointsInitial_.col(i).segment(numStates_, numParams_));
+            problemDescription_->dfdx_vec(
+                temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_), 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_),
+                dcov_dPointsY_.segment(i*numStates_, numStates_), 
+                param
+            );
+            problemDescription_->dfdp_vec(
+                temp_vec_pointDim_numPoints_.segment(i*pointDim_ + numStates_, numParams_), 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_),
+                dcov_dPointsY_.segment(i*numStates_, numStates_), 
+                param
+            );
         
             // GP-dynamics
             index = 0;
@@ -220,7 +252,7 @@ namespace grampc
         dd_cov += pointTransformation_->dpoints_dcov_vec(covCholStateAndParam_, temp_vec_pointDim_numPoints_);
     }
 
-    void ResamplingGPProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p)
+    void ResamplingGPProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
     {
         typeInt index;
         out.setZero();
@@ -243,7 +275,15 @@ namespace grampc
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
             // Known dynamics
-            problemDescription_->dfdu_vec(temp_vec_numInputs_, t, pointsInitial_.col(i), dmean_dpoints_vec.segment(i*numStates_, numStates_), u ,  pointsInitial_.col(i).segment(numStates_, numParams_));
+            problemDescription_->dfdu_vec(
+                temp_vec_numInputs_, 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_), 
+                dmean_dpoints_vec.segment(i*numStates_, numStates_), 
+                param
+            );
             out += temp_vec_numInputs_;
             
             // GP-dynamics
@@ -258,7 +298,15 @@ namespace grampc
         dcov_dPointsY_ = pointTransformation_->dcov_dpointsY_vec(pointsInitial_, adj.segment(numStates_, pointDim_*numStates_));
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dfdu_vec(temp_vec_numInputs_, t, pointsInitial_.col(i), dcov_dPointsY_.segment(i*numStates_, numStates_), u , pointsInitial_.col(i).segment(numStates_, numParams_));
+            problemDescription_->dfdu_vec(
+                temp_vec_numInputs_, 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_), 
+                dcov_dPointsY_.segment(i*numStates_, numStates_),
+                param
+            );
             out += temp_vec_numInputs_;
         }
         // GP-dynamics
@@ -269,37 +317,37 @@ namespace grampc
         }
     }
 
-    void ResamplingGPProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void ResamplingGPProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->lfct(out, t, x, u, p, xdes, udes);
+        problemDescription_->lfct(out, t, x, u, p, param);
     }
 
-    void ResamplingGPProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void ResamplingGPProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dldx(out, t, x, u, p, xdes, udes);
+        problemDescription_->dldx(out, t, x, u, p, param);
     }
 
-    void ResamplingGPProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void ResamplingGPProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dldu(out, t, x, u, p, xdes, udes);
+        problemDescription_->dldu(out, t, x, u, p, param);
     }
 
-    void ResamplingGPProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void ResamplingGPProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->Vfct(out, t, x, p, xdes);
+        problemDescription_->Vfct(out, t, x, p, param);
     }
 
-    void ResamplingGPProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void ResamplingGPProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dVdx(out, t, x, p, xdes);
+        problemDescription_->dVdx(out, t, x, p, param);
     }
 
-    void ResamplingGPProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void ResamplingGPProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-       problemDescription_->dVdT(out, t, x, p, xdes);
+       problemDescription_->dVdT(out, t, x, p, param);
     }
 
-    void ResamplingGPProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+    void ResamplingGPProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> cov(x.data() + numStates_, pointDim_, numStates_);
@@ -317,7 +365,7 @@ namespace grampc
         // Evaluate constraints for each sigma point
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->hfct(constraintMatrix_.col(i), t, pointsInitial_.col(i), u,  pointsInitial_.col(i).segment(numStates_, numParams_));
+            problemDescription_->hfct(constraintMatrix_.col(i), t, pointsInitial_.col(i), u,  pointsInitial_.col(i).segment(numStates_, numParams_), param);
         }
             
         // Compute tightened constraints
@@ -331,7 +379,7 @@ namespace grampc
         }
     }
 
-    void ResamplingGPProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+    void ResamplingGPProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         // Mapping of the outputs
         Eigen::Map<Matrix> outCov(out.data() + numStates_, pointDim_, numStates_);
@@ -349,14 +397,30 @@ namespace grampc
         // Derivative of the tightened constraints with respect to the states
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dhdx_vec(temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_), t, pointsInitial_.col(i), u, pointsInitial_.col(i).segment(numStates_, numParams_), constraintVec_.col(i));
-            problemDescription_->dhdp_vec(temp_vec_pointDim_numPoints_.segment(i*pointDim_ + numStates_, numParams_), t, pointsInitial_.col(i), u, pointsInitial_.col(i).segment(numStates_, numParams_), constraintVec_.col(i));
+            problemDescription_->dhdx_vec(
+                temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_), 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_), 
+                constraintVec_.col(i),
+                param
+            );
+            problemDescription_->dhdp_vec(
+                temp_vec_pointDim_numPoints_.segment(i*pointDim_ + numStates_, numParams_), 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_), 
+                constraintVec_.col(i),
+                param
+            );
         }
         out.segment(0, numStates_) = pointTransformation_->dpoints_dmean_vec(temp_vec_pointDim_numPoints_);
         outCov = pointTransformation_->dpoints_dcov_vec(covCholStateAndParam_, temp_vec_pointDim_numPoints_);
     }
 
-    void ResamplingGPProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+    void ResamplingGPProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         out.setZero();
 
@@ -367,12 +431,20 @@ namespace grampc
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
             // Derivative of the constraint with respect to the input
-            problemDescription_->dhdu_vec(temp_vec_numInputs_, t, pointsInitial_.col(i), u, pointsInitial_.col(i).segment(numStates_, numParams_), constraintVec_.col(i));
+            problemDescription_->dhdu_vec(
+                temp_vec_numInputs_, 
+                t, 
+                pointsInitial_.col(i), 
+                u, 
+                pointsInitial_.col(i).segment(numStates_, numParams_), 
+                constraintVec_.col(i),
+                param
+            );
             out += temp_vec_numInputs_;
         }
     }
 
-    void ResamplingGPProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p)
+    void ResamplingGPProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> cov(x.data() + numStates_, pointDim_, numStates_);
@@ -390,7 +462,7 @@ namespace grampc
         // Evaluate constraints for each sigma point
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->hTfct(terminalConstraintMatrix_.col(i), t, pointsInitial_.col(i), pointsInitial_.col(i).segment(numStates_, numParams_));
+            problemDescription_->hTfct(terminalConstraintMatrix_.col(i), t, pointsInitial_.col(i), pointsInitial_.col(i).segment(numStates_, numParams_), param);
         }
             
         // Compute tightened constraints
@@ -404,7 +476,7 @@ namespace grampc
         }
     }
 
-    void ResamplingGPProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec)
+    void ResamplingGPProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         // Mapping of the output covariance
         Eigen::Map<Matrix> outCov(out.data() + numStates_, pointDim_, numStates_);
@@ -422,14 +494,27 @@ namespace grampc
         // Derivative of the tightened constraints with respect to the states
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dhTdx_vec(temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_), t, pointsInitial_.col(i), pointsInitial_.col(i).segment(numStates_, numParams_), terminalConstraintVec_.col(i));
-            problemDescription_->dhTdp_vec(temp_vec_pointDim_numPoints_.segment(i*pointDim_+numStates_, numParams_), t, pointsInitial_.col(i), pointsInitial_.col(i).segment(numStates_, numParams_), terminalConstraintVec_.col(i));
+            problemDescription_->dhTdx_vec(
+                temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_), 
+                t, pointsInitial_.col(i), 
+                pointsInitial_.col(i).segment(numStates_, numParams_), 
+                terminalConstraintVec_.col(i),
+                param
+            );
+            problemDescription_->dhTdp_vec(
+                temp_vec_pointDim_numPoints_.segment(i*pointDim_+numStates_, numParams_), 
+                t, 
+                pointsInitial_.col(i), 
+                pointsInitial_.col(i).segment(numStates_, numParams_), 
+                terminalConstraintVec_.col(i),
+                param
+            );
         }
         out.segment(0, numStates_) = pointTransformation_->dpoints_dmean_vec(temp_vec_pointDim_numPoints_);
         outCov = pointTransformation_->dpoints_dcov_vec(covCholStateAndParam_, temp_vec_pointDim_numPoints_);
     }
 
-    void ResamplingGPProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec)
+    void ResamplingGPProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         out[0] = 0.0;
 
@@ -440,7 +525,7 @@ namespace grampc
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
             // Derivative of the constraint with respect to the prediction horizon
-            problemDescription_->dhTdT_vec(tempScalar_, t, pointsInitial_.col(i), pointsInitial_.col(i).segment(numStates_, numParams_), terminalConstraintVec_.col(i));
+            problemDescription_->dhTdT_vec(tempScalar_, t, pointsInitial_.col(i), pointsInitial_.col(i).segment(numStates_, numParams_), terminalConstraintVec_.col(i), param);
             out[0] += tempScalar_(0);
         }
     }

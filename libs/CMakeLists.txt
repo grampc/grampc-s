@@ -8,8 +8,7 @@
 # GRAMPC-S is distributed under the BSD-3-Clause license, see LICENSE.txt
 
 target_sources(grampc-s PRIVATE 
-	grampc/src/euler1.c
-	grampc/src/eulermod2.c
+	grampc/src/grampc_erk.c
 	grampc/src/grampc_alloc.c
 	grampc/src/grampc_fixedsize.c
 	grampc/src/grampc_init.c
@@ -18,8 +17,7 @@ target_sources(grampc-s PRIVATE
 	grampc/src/grampc_setopt.c
 	grampc/src/grampc_setparam.c
 	grampc/src/grampc_util.c
-	grampc/src/heun2.c
 	grampc/src/rodas.c
 	grampc/src/ruku45.c
 	grampc/src/simpson.c
-	grampc/src/trapezodial.c)
+	grampc/src/trapezoidal.c)

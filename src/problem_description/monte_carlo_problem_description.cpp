@@ -54,165 +54,165 @@ namespace grampc
         *NgT = 0;
     }
 
-    void MonteCarloProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+    void MonteCarloProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // f of all sigma points
         for (int i = 0; i < numSigmaPoints_; ++i)
         {
-           problemDescription_->ffct(out.segment(i*numStates_, numStates_), t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_));
+           problemDescription_->ffct(out.segment(i*numStates_, numStates_), t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), param);
         }
         // NOTE: diffusion of the samples (Wiener process noise) is only possible for discrete-time systems
         // or with a dedicated integrator (Euler-Maruyama integration) since the noise is not differentiable
     }
 
-    void MonteCarloProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p)
+    void MonteCarloProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
     {
         // dfdx of all sigma points
         for (int i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dfdx_vec(out.segment(i*numStates_, numStates_), t, x.segment(i*numStates_, numStates_), adj.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_));
+            problemDescription_->dfdx_vec(out.segment(i*numStates_, numStates_), t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), adj.segment(i*numStates_, numStates_), param);
         }
     }
 
-    void MonteCarloProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p)
+    void MonteCarloProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
     {
         // dfdu_vec of the first sigma point
-        problemDescription_->dfdu_vec(out, t, x, adj, u, p);
+        problemDescription_->dfdu_vec(out, t, x, adj, u, p, param);
 
         // Add dfdu_vec of the remaining sigma points
         for (int i = 1; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dfdu_vec(temp_vec_numInputs_, t, x.segment(i * numStates_, numStates_), adj.segment(i * numStates_, numStates_), u, p.segment(i * numParams_, numParams_));
+            problemDescription_->dfdu_vec(temp_vec_numInputs_, t, x.segment(i * numStates_, numStates_), u, p.segment(i * numParams_, numParams_), adj.segment(i * numStates_, numStates_), param);
             out += temp_vec_numInputs_;
         }
     }
 
-    void MonteCarloProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void MonteCarloProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Cost of each sigmapoint
         for (int i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->lfct(temp_vec_numSigmaPoints_.col(i), t, x.segment(numStates_, numStates_), u, p.segment(numParams_, numParams_), xdes, udes);
+            problemDescription_->lfct(temp_vec_numSigmaPoints_.col(i), t, x.segment(numStates_, numStates_), u, p.segment(numParams_, numParams_), param);
         }
 
         // Output is the mean of the cost distribution
         out[0] = pointTransformation_->mean1D(temp_vec_numSigmaPoints_); 
     }
 
-    void MonteCarloProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void MonteCarloProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // dl_dx_ij = dmean_dpoints__j * dpoint_j/dx_ij
         for(typeInt j = 0; j < numSigmaPoints_; ++j)
         {
-             problemDescription_->dldx(out.segment(j*numStates_, numStates_), t, x.segment(j*numStates_, numStates_), u, p.segment(j*numParams_, numParams_), xdes, udes);
+             problemDescription_->dldx(out.segment(j*numStates_, numStates_), t, x.segment(j*numStates_, numStates_), u, p.segment(j*numParams_, numParams_), param);
              out.segment(j*numStates_, numStates_) *= dmean_dPoints_(j);
         }
     }
 
-    void MonteCarloProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void MonteCarloProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // dldu of the first sigma point
-        problemDescription_->dldu(temp_vec_numInputs_, t, x, u, p, xdes, udes);
+        problemDescription_->dldu(temp_vec_numInputs_, t, x, u, p, param);
         out = temp_vec_numInputs_ * dmean_dPoints_(0);
         
         // Add dldu of the remaining sigma points
         for (int i = 1; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dldu(temp_vec_numInputs_, t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), xdes, udes);
+            problemDescription_->dldu(temp_vec_numInputs_, t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), param);
             out += temp_vec_numInputs_ * dmean_dPoints_(i);
         }
     }
 
-    void MonteCarloProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void MonteCarloProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Cost of each sigmapoint
         for (int i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->Vfct(temp_vec_numSigmaPoints_.col(i), t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), xdes);
+            problemDescription_->Vfct(temp_vec_numSigmaPoints_.col(i), t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), param);
         }
 
         // Output is the mean of the cost distribution
         out[0] = pointTransformation_->mean1D(temp_vec_numSigmaPoints_);
     }
 
-    void MonteCarloProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void MonteCarloProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // dV_dx_ij = dmean_dpoints__j * dpoint_j/dx_ij
         for(typeInt j = 0; j < numSigmaPoints_; ++j)
         {
-             problemDescription_->dVdx(out.segment(j*numStates_, numStates_), t, x.segment(j*numStates_, numStates_), p.segment(numParams_*j, numParams_), xdes);
+             problemDescription_->dVdx(out.segment(j*numStates_, numStates_), t, x.segment(j*numStates_, numStates_), p.segment(numParams_*j, numParams_), param);
              out.segment(j*numStates_, numStates_) *= dmean_dPoints_(j);
         }
     }
 
-    void MonteCarloProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void MonteCarloProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // dVdT of the first sigma point
-        problemDescription_->dVdT(out, t, x, p, xdes);
+        problemDescription_->dVdT(out, t, x, p, param);
         out(0) *= dmean_dPoints_(0);
         
         // Add dVdT of the remaining sigma points
         for (int i = 1; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dVdT(tempScalar_, t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), xdes);
+            problemDescription_->dVdT(tempScalar_, t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), param);
             out(0) += tempScalar_(0) * dmean_dPoints_(i);
         }
     }
 
-    void MonteCarloProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+    void MonteCarloProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Inequality constraint of all samples
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->hfct(out.segment(i*numConstraints_, numConstraints_), t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_));
+            problemDescription_->hfct(out.segment(i*numConstraints_, numConstraints_), t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), param);
         }
     }
 
-    void MonteCarloProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+    void MonteCarloProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {   
         // dhdx of all samples
         for (int i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dhdx_vec(out.segment(i*numStates_, numStates_), t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), vec.segment(i*numConstraints_, numConstraints_));
+            problemDescription_->dhdx_vec(out.segment(i*numStates_, numStates_), t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), vec.segment(i*numConstraints_, numConstraints_), param);
         }
     }
 
-    void MonteCarloProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+    void MonteCarloProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         out.setZero();
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
             /// Derivative of the constraint
-            problemDescription_->dhdu_vec(temp_vec_numInputs_, t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), vec.segment(i*numConstraints_, numConstraints_));
+            problemDescription_->dhdu_vec(temp_vec_numInputs_, t, x.segment(i*numStates_, numStates_), u, p.segment(i*numParams_, numParams_), vec.segment(i*numConstraints_, numConstraints_), param);
             out += temp_vec_numInputs_;
         }
     }
 
-    void MonteCarloProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p)
+    void MonteCarloProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Terminal inequality constraint of all samples
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->hTfct(out.segment(i*numTerminalConstraints_, numTerminalConstraints_), t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_));
+            problemDescription_->hTfct(out.segment(i*numTerminalConstraints_, numTerminalConstraints_), t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), param);
         }
     }
 
-    void MonteCarloProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec)
+    void MonteCarloProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         // dhTdx of all samples
         for (int i = 0; i < numSigmaPoints_; ++i)
         {
-            problemDescription_->dhTdx_vec(out.segment(i*numStates_, numStates_), t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), vec.segment(i*numTerminalConstraints_, numTerminalConstraints_));
+            problemDescription_->dhTdx_vec(out.segment(i*numStates_, numStates_), t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), vec.segment(i*numTerminalConstraints_, numTerminalConstraints_), param);
         }
     }
 
-    void MonteCarloProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec)
+    void MonteCarloProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         out[0] = 0.0;
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
         {
             /// Derivative of the constraint
-            problemDescription_->dhTdT_vec(tempScalar_, t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), vec.segment(numTerminalConstraints_*i, numTerminalConstraints_));
+            problemDescription_->dhTdT_vec(tempScalar_, t, x.segment(i*numStates_, numStates_), p.segment(i*numParams_, numParams_), vec.segment(numTerminalConstraints_*i, numTerminalConstraints_), param);
             out += tempScalar_;
         }
     }

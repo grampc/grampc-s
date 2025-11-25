@@ -92,7 +92,7 @@ namespace grampc
         *NgT = 0;
     }
 
-    void TaylorProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+    void TaylorProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> stateCov(x.data() + numStates_, numStates_, numStates_);
@@ -104,11 +104,11 @@ namespace grampc
         Eigen::Map<Matrix> d_stateParamCov(out.data() + numStates_ + numStates_ * numStates_, numStates_, numParams_);
 
         // Linearization of the system dynamics at the state mean and parameter mean
-        problemDescription_->dfdx(dfdx_.reshaped(), t, x, u, p);
+        problemDescription_->dfdx(dfdx_.reshaped(), t, x, u, p, param);
         problemDescription_->dfdp(dfdp_.reshaped(), t, x, u, p);
 
         // d/dt mean = f(mean)
-        problemDescription_->ffct(out, t, x, u, p);
+        problemDescription_->ffct(out, t, x, u, p, param);
 
         // d/dt cov_state = dfdx(mean) * cov_state + cov_state * dfdx(mean)^T + dfdp(mean) * cov_state_param^T + cov_state_param * dfdp(mean)^T + covariance of Wiener process
         d_stateCov.noalias() = dfdx_ * stateCov + stateCov * dfdx_.transpose() + dfdp_ * stateParamCov.transpose() + stateParamCov * dfdp_.transpose() + diffMatrixWienerProcess_;
@@ -117,7 +117,7 @@ namespace grampc
         d_stateParamCov.noalias() = dfdx_ * stateParamCov +  dfdp_ * paramCov;
     }
 
-    void TaylorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p)
+    void TaylorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> stateCov(x.data() + numStates_, numStates_, numStates_);
@@ -133,13 +133,13 @@ namespace grampc
         Eigen::Map<const Matrix> adjCovStateParam(adj.data() + numStates_ + numStates_ * numStates_, numStates_, numParams_);
 
         // Linearization of the system dynamics at the state mean and parameter mean
-        problemDescription_->dfdx(dfdx_.reshaped(), t, x, u, p);
+        problemDescription_->dfdx(dfdx_.reshaped(), t, x, u, p, param);
         problemDescription_->dfdp(dfdp_.reshaped(), t, x, u, p);
         problemDescription_->dfdxdx(dfdxdx_.reshaped(), t, x, u, p);
         problemDescription_->dfdxdp(dfdxdp_.reshaped(), t, x, u, p);
 
         // d(d_mean_state)/d(mean_state)
-        problemDescription_->dfdx_vec(out, t, x, adj, u, p);
+        problemDescription_->dfdx_vec(out, t, x, u, p, adj, param);
 
         // d(d_cov_state)/d(cov_state)
         dd_stateCov.noalias() = dfdx_.transpose() * adjCovState + adjCovState * dfdx_;
@@ -171,7 +171,7 @@ namespace grampc
         }
     }
 
-    void TaylorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p)
+    void TaylorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> stateCov(x.data() + numStates_, numStates_, numStates_);
@@ -187,7 +187,7 @@ namespace grampc
         problemDescription_->dfdpdu(dfdpdu_.reshaped(), t, x, u, p);
 
         // d(dmean_state)/du
-        problemDescription_->dfdu_vec(out, t, x, adj, u, p);
+        problemDescription_->dfdu_vec(out, t, x, u, p, adj, param);
 
         // d(d_cov_state)/du
         for(typeInt i = 0; i < numControlInputs_; ++i)
@@ -210,42 +210,42 @@ namespace grampc
         }
     }
 
-    void TaylorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void TaylorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->lfct(out, t, x, u, p, xdes, udes);
+        problemDescription_->lfct(out, t, x, u, p, param);
     }
 
-    void TaylorProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void TaylorProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dldx(out, t, x, u, p, xdes, udes);
+        problemDescription_->dldx(out, t, x, u, p, param);
     }
 
-    void TaylorProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void TaylorProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dldu(out, t, x, u, p, xdes, udes);
+        problemDescription_->dldu(out, t, x, u, p, param);
     }
 
-    void TaylorProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void TaylorProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->Vfct(out, t, x, p, xdes);
+        problemDescription_->Vfct(out, t, x, p, param);
     }
 
-    void TaylorProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void TaylorProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dVdx(out, t, x, p, xdes);
+        problemDescription_->dVdx(out, t, x, p, param);
     }
 
-    void TaylorProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+    void TaylorProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dVdT(out, t, x, p, xdes);
+        problemDescription_->dVdT(out, t, x, p, param);
     }
 
-    void TaylorProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+    void TaylorProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         Eigen::Map<const Matrix> covStates(x.data() + numStates_, numStates_, numStates_);
 
         // evaluate constraint at the mean
-        problemDescription_->hfct(out, t, x, u, p);
+        problemDescription_->hfct(out, t, x, u, p, param);
 
         // evaluate constraint derivatives
         problemDescription_->dhdx(dhdx_.reshaped(), t, x, u, p);
@@ -260,7 +260,7 @@ namespace grampc
         }
     }
 
-    void TaylorProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+    void TaylorProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> covStates(x.data() + numStates_, numStates_, numStates_);
@@ -276,7 +276,7 @@ namespace grampc
         outStateParamCov.setZero();
 
         // d(mean_h)/d(mean_x)
-        problemDescription_->dhdx_vec(out, t, x, u, p, vec);
+        problemDescription_->dhdx_vec(out, t, x, u, p, vec, param);
 
         // d(var_h)/d(cov_x)
         outStateCov.setZero(); 
@@ -299,7 +299,7 @@ namespace grampc
         }
     }
 
-    void TaylorProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+    void TaylorProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> covStates(x.data() + numStates_, numStates_, numStates_);
@@ -308,7 +308,7 @@ namespace grampc
         problemDescription_->dhdxdu(dhdxdu_.reshaped(), t, x, u, p);
 
         // d(mean_h)/d(u)
-        problemDescription_->dhdu_vec(out, t, x, u, p, vec);
+        problemDescription_->dhdu_vec(out, t, x, u, p, vec, param);
 
         // d(var_h)/d(u)
         for(typeInt i = 0; i < numConstraints_; ++i)
@@ -320,12 +320,12 @@ namespace grampc
         }
     }
 
-    void TaylorProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p)
+    void TaylorProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
         Eigen::Map<const Matrix> covStates(x.data() + numStates_, numStates_, numStates_);
 
         // evaluate constraint at the mean
-        problemDescription_->hTfct(out, t, x, p);
+        problemDescription_->hTfct(out, t, x, p, param);
 
         // evaluate constraint derivatives
         problemDescription_->dhTdx(dhTdx_.reshaped(), t, x, p);
@@ -340,7 +340,7 @@ namespace grampc
         }
     }
 
-    void TaylorProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec)
+    void TaylorProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> covStates(x.data() + numStates_, numStates_, numStates_);
@@ -356,7 +356,7 @@ namespace grampc
         outStateParamCov.setZero();
 
         // d(mean_hT)/d(mean_x)
-        problemDescription_->dhTdx_vec(out, t, x, p, vec);
+        problemDescription_->dhTdx_vec(out, t, x, p, vec, param);
 
         // d(var_hT)/d(cov_x)
         outStateCov.setZero(); 
@@ -379,7 +379,7 @@ namespace grampc
         }
     }
 
-    void TaylorProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec)
+    void TaylorProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         out[0] = 0.0;
 
@@ -387,7 +387,7 @@ namespace grampc
         Eigen::Map<const Matrix> covStates(x.data() + numStates_, numStates_, numStates_);
 
         // d(mean_hT)/dT
-        problemDescription_->dhTdT_vec(out, t, x, p, vec);
+        problemDescription_->dhTdT_vec(out, t, x, p, vec, param);
 
         // derivative of the constraint
         problemDescription_->dhTdxdT(dhTdxdT_.reshaped(), t, x, p);
