@@ -68,14 +68,14 @@ int main()
     SigmaPointProblemDescriptionPtr problem = SigmaPointProblem(mspProblem, transform);
     // TaylorProblemDescriptionPtr problem = TaylorProblem(mspProblem, covProcessNoise);
     // ResamplingProblemDescriptionPtr problem = ResamplingProblem(mspProblem, transform, covProcessNoise);
-
-    // simulator
-    SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, mspProblem, _1, _2, _3, _4, _5);
-    Simulator sim(state->mean(), param->mean(), u0.size(), trueSystemFunction, "heun", 0, dt_MPC, dt_simulation, true);
     
     // create solver
     GrampcPtr solver = Solver(problem);
     const typeGRAMPCparam *par = solver->getParameters();
+    
+    // simulator
+    SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, mspProblem, _1, _2, _3, _4, _5, par);
+    Simulator sim(state->mean(), param->mean(), (typeInt) u0.size(), trueSystemFunction, "heun", 0, dt_MPC, dt_simulation, true);
 
     // set initial states and parameters depending on the propagation method
     problem->compute_x0_and_p0(state, param);

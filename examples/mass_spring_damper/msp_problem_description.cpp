@@ -44,7 +44,7 @@ void MassSpringDamperProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeI
 	*NhT = 0;
 }
 
-void MassSpringDamperProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+void MassSpringDamperProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
 	for (typeInt k = 0; k <= numberOfMasses_ - 1; k++)
 	{
@@ -61,7 +61,7 @@ void MassSpringDamperProblemDescription::ffct(VectorRef out, ctypeRNum t, Vector
 	out[2 * numberOfMasses_ - 1] = p[0] / pSys_[0] * x[numberOfMasses_ - 2] - 2 * p[0] / pSys_[0] * x[numberOfMasses_ - 1] + p[1] / pSys_[0] * x[2 * numberOfMasses_ - 2] - 2 * p[1] / pSys_[0] * x[2 * numberOfMasses_ - 1] - 1 / pSys_[0] * u[1];
 }
 
-void MassSpringDamperProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef vec, VectorConstRef u, VectorConstRef p)
+void MassSpringDamperProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
 	out[0] = -2 * p[0] / pSys_[0] * vec[numberOfMasses_] + p[0] / pSys_[0] * vec[numberOfMasses_ + 1];
 
@@ -82,13 +82,13 @@ void MassSpringDamperProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, Ve
 	out[2 * numberOfMasses_ - 1] = vec[numberOfMasses_ - 1] + p[1] / pSys_[0] * vec[2 * numberOfMasses_ - 2] - 2 * p[1] / pSys_[0] * vec[2 * numberOfMasses_ - 1];
 }
 
-void MassSpringDamperProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef vec, VectorConstRef u, VectorConstRef p)
+void MassSpringDamperProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
 	out[0] = 1 / pSys_[0] * vec[numberOfMasses_];
 	out[1] = -1 / pSys_[0] * vec[2 * numberOfMasses_ - 1];
 }
 
-void MassSpringDamperProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef vec, VectorConstRef u, VectorConstRef p)
+void MassSpringDamperProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
 	out[0] = -2.0 / pSys_[0] * x[0] + 1.0 / pSys_[0] * x[1] * vec[numberOfMasses_];
 	for (typeInt k = 1; k <= numberOfMasses_ - 2; k++)
@@ -106,8 +106,10 @@ void MassSpringDamperProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, Ve
 	out[1] += vec[2 * numberOfMasses_ - 1] / pSys_[0] * x[2 * numberOfMasses_ - 2] - 2 / pSys_[0] * x[2 * numberOfMasses_ - 1];
 }
 
-void MassSpringDamperProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+void MassSpringDamperProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *xdes = param->xdes;
+    ctypeRNum *udes = param->udes;
 	out[0] = 0;
 	for (typeInt i = 0; i <= Nx_ - 1; i++)
 	{
@@ -120,24 +122,27 @@ void MassSpringDamperProblemDescription::lfct(VectorRef out, ctypeRNum t, Vector
 	out[0] *= 0.5;
 }
 
-void MassSpringDamperProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+void MassSpringDamperProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *xdes = param->xdes;
 	for (typeInt i = 0; i <= Nx_ - 1; i++)
 	{
 		out[i] = pCost_[i] * (x[i] - xdes[i]);
 	}
 }
 
-void MassSpringDamperProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+void MassSpringDamperProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *udes = param->udes;
 	for (typeInt i = 0; i <= 2 - 1; i++)
 	{
 		out[i] = pCost_[Nx_ + i] * (u[i] - udes[i]);
 	}
 }
 
-void MassSpringDamperProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+void MassSpringDamperProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *xdes = param->xdes;
 	out[0] = 0;
 	for (typeInt i = 0; i <= Nx_ - 1; i++)
 	{
@@ -146,35 +151,36 @@ void MassSpringDamperProblemDescription::Vfct(VectorRef out, ctypeRNum t, Vector
 	out[0] *= 0.5;
 }
 
-void MassSpringDamperProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+void MassSpringDamperProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *xdes = param->xdes;
 	for (typeInt i = 0; i <= Nx_ - 1; i++)
 	{
 		out[i] = pCost_[Nx_ + 2 + i] * (x[i] - xdes[i]);
 	}
 }
 
-void MassSpringDamperProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+void MassSpringDamperProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
 {
 }
 
-void MassSpringDamperProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+void MassSpringDamperProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
 }
 
-void MassSpringDamperProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+void MassSpringDamperProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
 }
 
-void MassSpringDamperProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+void MassSpringDamperProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
 }
 
-void MassSpringDamperProblemDescription::dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+void MassSpringDamperProblemDescription::dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
 }
 
-void MassSpringDamperProblemDescription::dfdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+void MassSpringDamperProblemDescription::dfdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
 	for(typeInt i = 0; i < numberOfMasses_; ++i)
 	{

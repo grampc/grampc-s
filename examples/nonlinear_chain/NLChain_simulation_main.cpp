@@ -101,13 +101,13 @@ int main()
   // configure stochastic problem description
   SigmaPointProblemDescriptionPtr problem = SigmaPointProblem(chainProblem, transform);
 
-  // simulator
-  SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, chainProblem, _1, _2, _3, _4, _5);
-  Simulator sim(state->mean(), u0.size(), trueSystemFunction, "heun", 0, dt_MPC, dt_simulation, true);
-
   // create solver
   GrampcPtr solver = Solver(problem);
   const typeGRAMPCparam *par = solver->getParameters();
+
+  // simulator
+  SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, chainProblem, _1, _2, _3, _4, _5, par);
+  Simulator sim(state->mean(), (typeInt) u0.size(), trueSystemFunction, "heun", 0, dt_MPC, dt_simulation, true);
 
   // set initial states and parameters depending on the propagation method
   problem->compute_x0_and_p0(state);
@@ -130,7 +130,7 @@ int main()
   solver->setopt_int("MaxGradIter", 3);
   solver->setopt_int("MaxMultIter", 1);
   solver->setopt_int("Nhor", 80);
-  solver->setopt_string("Integrator", "heun");
+  solver->setopt_string("Integrator", "erk2");
   solver->setopt_string("TerminalCost", "off");
 
   // computation time

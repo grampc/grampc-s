@@ -8,8 +8,11 @@
 # GRAMPC-S is distributed under the BSD-3-Clause license, see LICENSE.txt
 
 target_sources(grampc-s PRIVATE 
+    grampc/src/discrete.c
+    grampc/src/finite_diff.c
 	grampc/src/grampc_erk.c
 	grampc/src/grampc_alloc.c
+    grampc/src/grampc_configreader.c
 	grampc/src/grampc_fixedsize.c
 	grampc/src/grampc_init.c
 	grampc/src/grampc_mess.c

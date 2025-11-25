@@ -65,7 +65,7 @@ The system dynamics in :math:numref:`eq:reactor_dyn` are implemented in the func
 
 .. code-block:: C++
 
-    void ReactorProblemDescription::ffct(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p)
+    void ReactorProblemDescription::ffct(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
         out[0] = -pSys_[0] * x[0] - pSys_[2] * x[0] * x[0] + (1 - x[0]) * u[0];
         out[1] = pSys_[0] * x[0] - pSys_[1] * x[1] - x[1] * u[0]; 
@@ -76,8 +76,10 @@ Next, the cost function must be implemented in the function ``lfct``:
 
 .. code-block:: C++
 
-	void ReactorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+	void ReactorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
+        ctypeRNum *xdes = param->xdes;
+        ctypeRNum *udes = param->udes;
         out[0] = pCost_[2] * (x[0] - xdes[0]) * (x[0] - xdes[0]) +
         pCost_[3] * (x[1] - xdes[1]) * (x[1] - xdes[1]) +
         pCost_[4] * (u[0] - udes[0]) * (u[0] - udes[0]);
@@ -89,7 +91,7 @@ The inequality constraint is implemented in the function ``hfct``:
 
 .. code-block:: C++
 
-    void ReactorProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p)
+    void ReactorProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     { 
         out[0] = x[1] - pCon_[0];  
     }
@@ -99,35 +101,37 @@ As described in Section :ref:`sec:implementation_problem`, the matrix product of
 
 .. code-block:: C++
 
-    void ReactorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p)
+    void ReactorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
     {
         out[0] = (-pSys_[0] - pSys_[2] * 2 * x[0] - u[0]) * adj[0] + pSys_[0] * adj[1];
         out[1] = (-pSys_[1] - u[0]) * adj[1];
     }
 
-    void ReactorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p)
+    void ReactorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
     {
         out[0] = (1 - x[0]) * adj[0] + (-x[1]) * adj[1];
     }
 
-    void ReactorProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void ReactorProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
+        ctypeRNum *xdes = param->xdes;
         out[0] = 2 * pCost_[2] * (x[0] - xdes[0]);
         out[1] = 2 * pCost_[3] * (x[1] - xdes[1]);
     }
 
-    void ReactorProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+    void ReactorProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
+        ctypeRNum *udes = param->udes;
         out[0] = 2 * pCost_[4] * (u[0] - udes[0]);
     }
 
-    void ReactorProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+    void ReactorProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         out[0] = 0.0;
         out[1] = vec[0];
     }
 
-    void ReactorProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+    void ReactorProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
     {
         out[0] = 0.0;
     }

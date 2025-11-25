@@ -91,7 +91,7 @@ int main()
     solver->setopt_int("MaxGradIter", 5);
     solver->setopt_int("MaxMultIter", 2);
     solver->setopt_int("Nhor", 30);
-    solver->setopt_string("Integrator", "heun");
+    solver->setopt_string("Integrator", "erk2");
     solver->setopt_real("LineSearchMax", 100);
     solver->setopt_real("PenaltyMin", 1e1);
     solver->setopt_real_vector("ConstraintsAbsTol", &constraintsAbsTol[0]);

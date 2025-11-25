@@ -36,7 +36,7 @@ void InvertedPendulumProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeI
 
 /** System function f(t,x,u,p,userparam)
     ------------------------------------ **/
-void InvertedPendulumProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+void InvertedPendulumProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
 	out[0] = x[1];
     out[1] = u[0];
@@ -46,7 +46,7 @@ void InvertedPendulumProblemDescription::ffct(VectorRef out, ctypeRNum t, Vector
 
 
 /** Jacobian df/dx multiplied by vector vec, i.e. (df/dx)^T*vec or vec^T*(df/dx) **/
-void InvertedPendulumProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef vec, VectorConstRef u, VectorConstRef p)
+void InvertedPendulumProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
     ctypeRNum  t2 = pSys_[1]*pSys_[1];
     ctypeRNum  t3 = pSys_[2]*t2;
@@ -60,29 +60,32 @@ void InvertedPendulumProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, Ve
 
 
 /** Jacobian df/du multiplied by vector vec, i.e. (df/du)^T*vec or vec^T*(df/du) **/
-void InvertedPendulumProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef vec, VectorConstRef u, VectorConstRef p)
+void InvertedPendulumProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
     out[0] = vec[1]-(pSys_[1]*pSys_[2]*vec[3]*std::cos(x[2]))/(pSys_[4]+(pSys_[1]*pSys_[1])*pSys_[2]);
 }
 
 
 /** Jacobian df/dp multiplied by vector vec, i.e. (df/dp)^T*vec or vec^T*(df/dp) **/
-void InvertedPendulumProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef vec, VectorConstRef u, VectorConstRef p)
+void InvertedPendulumProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
 }
 
 
 /** Integral cost l(t,x(t),u(t),p,xdes,udes,userparam) 
     -------------------------------------------------- **/
-void InvertedPendulumProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+void InvertedPendulumProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *xdes = param->xdes;
+    ctypeRNum *udes = param->udes;
     out[0] = pCost_[8]*POW2(u[0]-udes[0])+pCost_[0]*POW2(x[0]-xdes[0])+pCost_[1]*POW2(x[1]-xdes[1])+pCost_[2]*POW2(x[2]-xdes[2])+pCost_[3]*POW2(x[3]-xdes[3]);
 }
 
 
 /** Gradient dl/dx **/
-void InvertedPendulumProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+void InvertedPendulumProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *xdes = param->xdes;
     out[0] = pCost_[0]*(x[0]-xdes[0])*2.0;
     out[1] = pCost_[1]*(x[1]-xdes[1])*2.0;
     out[2] = pCost_[2]*(x[2]-xdes[2])*2.0;
@@ -91,29 +94,32 @@ void InvertedPendulumProblemDescription::dldx(VectorRef out, ctypeRNum t, Vector
 
 
 /** Gradient dl/du **/
-void InvertedPendulumProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+void InvertedPendulumProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *udes = param->udes;
     out[0] = pCost_[8]*(u[0]-udes[0])*2.0;
 }
 
 
 /** Gradient dl/dp **/
-void InvertedPendulumProblemDescription::dldp(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef xdes, VectorConstRef udes)
+void InvertedPendulumProblemDescription::dldp(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
 }
 
 
 /** Terminal cost V(T,x(T),p,xdes,userparam) 
     ---------------------------------------- **/
-void InvertedPendulumProblemDescription::Vfct(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+void InvertedPendulumProblemDescription::Vfct(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *xdes = param->xdes;
     out[0] = pCost_[4]*POW2(x[0]-xdes[0])+pCost_[5]*POW2(x[1]-xdes[1])+pCost_[6]*POW2(x[2]-xdes[2])+pCost_[7]*POW2(x[3]-xdes[3]);
 }
 
 
 /** Gradient dV/dx **/
-void InvertedPendulumProblemDescription::dVdx(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+void InvertedPendulumProblemDescription::dVdx(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
 {
+    ctypeRNum *xdes = param->xdes;
     out[0] = pCost_[4]*(x[0]-xdes[0])*2.0;
     out[1] = pCost_[5]*(x[1]-xdes[1])*2.0;
     out[2] = pCost_[6]*(x[2]-xdes[2])*2.0;
@@ -122,13 +128,13 @@ void InvertedPendulumProblemDescription::dVdx(VectorRef out, ctypeRNum T, Vector
 
 
 /** Gradient dV/dp **/
-void InvertedPendulumProblemDescription::dVdp(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+void InvertedPendulumProblemDescription::dVdp(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
 {
 }
 
 
 /** Gradient dV/dT **/
-void InvertedPendulumProblemDescription::dVdT(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, VectorConstRef xdes)
+void InvertedPendulumProblemDescription::dVdT(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
 {
     out[0] = 0.0;
 }
@@ -136,7 +142,7 @@ void InvertedPendulumProblemDescription::dVdT(VectorRef out, ctypeRNum T, Vector
 
 /** Inequality constraints h(t,x(t),u(t),p,uperparam) <= 0 
     ------------------------------------------------------ **/
-void InvertedPendulumProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+void InvertedPendulumProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
     out[0] = x[1]-pCon_[0];
     out[1] = -x[1]-pCon_[0];
@@ -144,7 +150,7 @@ void InvertedPendulumProblemDescription::hfct(VectorRef out, ctypeRNum t, Vector
 
 
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
-void InvertedPendulumProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+void InvertedPendulumProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
     out[0] = 0.0;
     out[1] = vec[0]-vec[1];
@@ -154,13 +160,13 @@ void InvertedPendulumProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, Ve
 
 
 /** Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dg/du) **/
-void InvertedPendulumProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec)
+void InvertedPendulumProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
 {
     out[0] = 0.0;
 }
 
 /** Jacobian df/dx in vector form (column-wise) **/
-void InvertedPendulumProblemDescription::dfdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+void InvertedPendulumProblemDescription::dfdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
 {
     ctypeRNum  t2 = pSys_[1]*pSys_[1];
     ctypeRNum  t3 = pSys_[2]*t2;

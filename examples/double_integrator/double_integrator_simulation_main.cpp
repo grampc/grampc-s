@@ -15,6 +15,12 @@
 using namespace grampc;
 using namespace std::placeholders;
 
+void true_function(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p)
+{
+    out[0] = x[1];
+	out[1] = u[0];
+}
+
 int main()
 {
     // State distribution
@@ -83,14 +89,14 @@ int main()
     Vector adj = Vector::Ones(20,1);
     // stochastic problem description
     ResamplingProblemDescriptionPtr problem = ResamplingProblem(integratorProblem, constraintApprox, transform, WienerProcessDiffusionMatirx);
-   
-    // simulator
-    SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, integratorProblem, _1, _2, _3, _4, _5);
-    Simulator sim(state->mean(), u0.size(), trueSystemFunction, "heun", 0, dt_MPC, dt_simulation, true);
 
     // create solver
     GrampcPtr solver = Solver(problem);
     const typeGRAMPCparam *par = solver->getParameters();
+    
+    // simulator
+    SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, integratorProblem, _1, _2, _3, _4, _5, par);
+    Simulator sim(state->mean(), (typeInt) u0.size(), trueSystemFunction, "heun", 0, dt_MPC, dt_simulation, true);
 
     // set initial states and parameters
     problem->compute_x0_and_p0(state);
@@ -117,7 +123,7 @@ int main()
     solver->setopt_int("MaxGradIter", 2);
     solver->setopt_int("MaxMultIter", 2);
     solver->setopt_int("Nhor", 20);
-    solver->setopt_string("Integrator", "heun");
+    solver->setopt_string("Integrator", "erk2");
     solver->setopt_real("PenaltyMin", 1e3);
     solver->setopt_real_vector("ConstraintsAbsTol", &constraintsAbsTol[0]);
     solver->setopt_string("OptimTime", "on");

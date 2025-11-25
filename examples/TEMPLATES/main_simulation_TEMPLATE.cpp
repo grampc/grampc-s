@@ -79,14 +79,14 @@ int main()
     // ResamplingProblemDescriptionPtr problem = ResamplingProblem(templateProblem, constraintApprox, transform, covProcessNoise);
     // MonteCarloProblemDescriptionPtr problem = MonteCarloProblem(templateProblem, transform);
     SigmaPointProblemDescriptionPtr problem = SigmaPointProblem(templateProblem, constraintApprox, transform);
-
-    // simulator
-    SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, templateProblem, _1, _2, _3, _4, _5);
-    Simulator sim(state->mean(), param->mean(), u0.size(), trueSystemFunction, "heun", 0, dt_MPC, dt_simulation, true);
     
     // create solver
     GrampcPtr solver = Solver(problem);
     const typeGRAMPCparam *par = solver->getParameters();
+    
+    // simulator
+    SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, templateProblem, _1, _2, _3, _4, _5, par);
+    Simulator sim(state->mean(), param->mean(), u0.size(), trueSystemFunction, "heun", 0, dt_MPC, dt_simulation, true);
 
     // set initial states and parameters depending on the propagation method
     problem->compute_x0_and_p0(state, param);
@@ -110,7 +110,7 @@ int main()
     solver->setopt_int("MaxGradIter", 3);
     solver->setopt_int("MaxMultIter", 2);
     solver->setopt_int("Nhor", 20);
-    solver->setopt_string("Integrator", "heun");
+    solver->setopt_string("Integrator", "erk2");
     solver->setopt_real("PenaltyMin", 1e6);
     solver->setopt_real_vector("ConstraintsAbsTol", &constraintsAbsTol[0]);
 
