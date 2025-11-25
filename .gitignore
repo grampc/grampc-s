@@ -11,6 +11,8 @@ bin/
 build/
 .venv/
 
+slprj/
+
 *.cflags
 *.config
 *.creator
