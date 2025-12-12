@@ -1,0 +1,580 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Example: Continuous stirred tank reactor &#8212; grampc-s 1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=a681ed88"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>window.MathJax = {"tex": {"macros": {"vm": ["\\boldsymbol{#1}", 1], "trans": ["^{\\mathrm{T}}"], "inv": ["^{-1}"], "diag": ["\\DeclareMathOperator*{\\diag}{diag}"], "gp": ["{\\mathcal{GP}"], "ex": ["\\mathds{E}\\left[#1\right]", 1]}}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'example';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix" href="appendix.html" />
+    <link rel="prev" title="Simulation and Visualization" href="simulation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">grampc-s 1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system_class.html">System class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deterministic_approx.html">Approximation of the stochastic OCP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.html">Simulation and Visualization</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Example: Continuous stirred tank reactor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">Appendix</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/example.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Example: Continuous stirred tank reactor</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="example-continuous-stirred-tank-reactor">
+<span id="chap-example"></span><h1>Example: Continuous stirred tank reactor<a class="headerlink" href="#example-continuous-stirred-tank-reactor" title="Link to this heading">#</a></h1>
+<p>This section shows the implementation of a control of a continuous stirred tank reactor with GRAMPC-S, which can be found in the folder <code class="docutils literal notranslate"><span class="pre">examples/reactor</span></code>. A simplified and normalized version of the model from <a class="footnote-reference brackets" href="#footcite-klattengell-95" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, <a class="footnote-reference brackets" href="#footcite-rothfuss19961433" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> is used, which is <a class="footnote-reference brackets" href="#footcite-graichen20041123" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a></p>
+<div class="math notranslate nohighlight" id="equation-eq-reactor-dyn">
+<span class="eqno">(2)<a class="headerlink" href="#equation-eq-reactor-dyn" title="Link to this equation">#</a></span>\[ \begin{align}\begin{aligned}    \dot c_A &amp;= -k_1 c_A - k_3 c_A^2 + (1 - c_A) u\\    \dot c_B &amp;= k_1 c_A - k_2 c_B - c_B u \,,\end{aligned}\end{align} \]</div>
+<p>where <span class="math notranslate nohighlight">\(c_A\)</span> is the normalized concentration of the educt <span class="math notranslate nohighlight">\(A\)</span>, <span class="math notranslate nohighlight">\(c_B\)</span> is the normalized concentration of product <span class="math notranslate nohighlight">\(B\)</span>, <span class="math notranslate nohighlight">\(u\)</span> is the volume flow rate, and</p>
+<div class="math notranslate nohighlight">
+\[k_1 = 50\text{h}^-1\,, \qquad k_2 = 100\text{h}^-1\,, \qquad k_3 = 100\text{h}^-1\]</div>
+<p>are parameters of the process.
+The optimization problem</p>
+<div class="math notranslate nohighlight" id="equation-eq-ocp-reactor">
+<span class="eqno">(3)<a class="headerlink" href="#equation-eq-ocp-reactor" title="Link to this equation">#</a></span>\[ \begin{align}\begin{aligned}\min_{u} \,\,\quad &amp; J\left( u; \, \vm x_0 \right) = \mathbb{E} \left[\int\limits_0^T \!\Delta \vm x \trans \vm Q \Delta \vm x  + 0.1 \Delta u^2 \,\, \text{d}t \right]\\\operatorname{s.t.} \quad &amp; \dot{\vm{x}} = \vm f(\vm{x}, \, u)\,,\quad \vm{x}(0) = \vm x_0\\&amp; \mathbb{P} \left[ c_B \leq 0.14 \right] \geq 0.95\\&amp; u \in \left[ 10 ,\, 100 \right]\end{aligned}\end{align} \]</div>
+<p>should be solved, where the system dynamics are given by <a class="reference internal" href="#equation-eq-reactor-dyn">(2)</a> and <span class="math notranslate nohighlight">\(\Delta \vm x = \vm x - \vm x_\text{des}\)</span> and <span class="math notranslate nohighlight">\(\Delta u = u - u_\text{des}\)</span> denote the deviation of the states and the control input from the corresponding desired values, with the weight matrix <span class="math notranslate nohighlight">\(\vm Q = \mathrm{diag}([10^2, 10^2])\)</span>.
+It is assumed that the current state is not exactly known due to measurement noise, which makes it necessary to predict the uncertainties.
+These are required to evaluate the probabilistic constraint for the concentration <span class="math notranslate nohighlight">\(c_B\)</span>.
+The problem description will now be implemented for this OCP.
+For this purpose, a class <code class="docutils literal notranslate"><span class="pre">ReactorProblemDescription</span></code> is created, which provides all the necessary functions from Section <a class="reference internal" href="implementation.html#sec-implementation-problem"><span class="std std-ref">Implementation of the problem description</span></a>.
+First, the constructor is implemented:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">ReactorProblemDescription</span><span class="o">::</span><span class="n">ReactorProblemDescription</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">typeRNum</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">pSys</span><span class="p">,</span>
+<span class="w">                                                    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">typeRNum</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">pCost</span><span class="p">,</span>
+<span class="w">                                                    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">typeRNum</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">pCon</span><span class="p">)</span>
+<span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">pSys_</span><span class="p">(</span><span class="n">pSys</span><span class="p">),</span><span class="w"> </span><span class="n">pCost_</span><span class="p">(</span><span class="n">pCost</span><span class="p">),</span><span class="w"> </span><span class="n">pCon_</span><span class="p">(</span><span class="n">pCon</span><span class="p">)</span>
+<span class="p">{}</span>
+</pre></div>
+</div>
+<p>The constructor receives vectors containing the system parameters, the coefficients for the cost function and for the constraint and saves them in member variables.
+Next, the number of states, the number of control inputs, the number of parameters, the number of constraints and the number of terminal constraints of the OCP must be specified.
+This is realized in the function <code class="docutils literal notranslate"><span class="pre">ocp_dim</span></code>:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::ocp_dim</span><span class="p">(</span><span class="n">typeInt</span><span class="w"> </span><span class="o">*</span><span class="n">Nx</span><span class="p">,</span><span class="w"> </span><span class="n">typeInt</span><span class="w"> </span><span class="o">*</span><span class="n">Nu</span><span class="p">,</span><span class="w"> </span><span class="n">typeInt</span><span class="w"> </span><span class="o">*</span><span class="n">Np</span><span class="p">,</span><span class="w"> </span><span class="n">typeInt</span><span class="w"> </span><span class="o">*</span><span class="n">Ng</span><span class="p">,</span><span class="w"> </span><span class="n">typeInt</span><span class="w"> </span><span class="o">*</span><span class="n">Nh</span><span class="p">,</span><span class="w"> </span><span class="n">typeInt</span><span class="w"> </span><span class="o">*</span><span class="n">NgT</span><span class="p">,</span><span class="w"> </span><span class="n">typeInt</span><span class="w"> </span><span class="o">*</span><span class="n">NhT</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="n">Nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w">  </span><span class="o">*</span><span class="n">Nu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="o">*</span><span class="n">Np</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="o">*</span><span class="n">Ng</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="o">*</span><span class="n">Nh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="o">*</span><span class="n">NgT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="o">*</span><span class="n">NhT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Please note that the generic data type <code class="docutils literal notranslate"><span class="pre">typeInt</span></code> for integer values is used here which is defined by GRAMPC in <code class="docutils literal notranslate"><span class="pre">grampc_macro.h</span></code>.
+The generic data types <code class="docutils literal notranslate"><span class="pre">typeRNum</span></code> and <code class="docutils literal notranslate"><span class="pre">ctypeRNum</span></code> for floating point numbers are also defined there.
+The system dynamics in <a class="reference internal" href="#equation-eq-reactor-dyn">(2)</a> are implemented in the function <code class="docutils literal notranslate"><span class="pre">ffct</span></code>:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::ffct</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">pSys_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">pSys_</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pSys_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">pSys_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here, the member variable <code class="docutils literal notranslate"><span class="pre">pSys_</span></code> is used, which was set in the constructor.
+Next, the cost function must be implemented in the function <code class="docutils literal notranslate"><span class="pre">lfct</span></code>:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::lfct</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="o">*</span><span class="n">xdes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">param</span><span class="o">-&gt;</span><span class="n">xdes</span><span class="p">;</span>
+<span class="w">    </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="o">*</span><span class="n">udes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">param</span><span class="o">-&gt;</span><span class="n">udes</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pCost_</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">xdes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">xdes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="o">+</span>
+<span class="w">    </span><span class="n">pCost_</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">xdes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">xdes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="o">+</span>
+<span class="w">    </span><span class="n">pCost_</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">udes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">udes</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Again, a member variable is accessed, which was set in the constructor.
+If terminal constraints need to be taken into account in addition to the iterative costs, these must be implemented in the function <code class="docutils literal notranslate"><span class="pre">Vfct</span></code>.
+The inequality constraint is implemented in the function <code class="docutils literal notranslate"><span class="pre">hfct</span></code>:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::hfct</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">pCon_</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The underlying solver GRAMPC is gradient-based, so some derivatives with respect to <span class="math notranslate nohighlight">\(\vm x\)</span> and <span class="math notranslate nohighlight">\(u\)</span> must be implemented for the above functions.
+As described in Section <a class="reference internal" href="implementation.html#sec-implementation-problem"><span class="std std-ref">Implementation of the problem description</span></a>, the matrix product of the Jacobian matrix and an arbitrary vector, which is passed as a pointer, is returned for the derivatives of the system dynamics and the constraint:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::dfdx_vec</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="n">pSys_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">pSys_</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">pSys_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="n">pSys_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::dfdu_vec</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">adj</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">adj</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::dldx</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="o">*</span><span class="n">xdes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">param</span><span class="o">-&gt;</span><span class="n">xdes</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pCost_</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">xdes</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pCost_</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">xdes</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::dldu</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="o">*</span><span class="n">udes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">param</span><span class="o">-&gt;</span><span class="n">udes</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pCost_</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">udes</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::dhdx_vec</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">vec</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">ReactorProblemDescription::dhdu_vec</span><span class="p">(</span><span class="n">VectorRef</span><span class="w"> </span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w">  </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">u</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="n">VectorConstRef</span><span class="w"> </span><span class="n">vec</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">typeGRAMPCparam</span><span class="w"> </span><span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>All functions of the OCP are now defined.
+The next step is to define the distribution of states, create and parameterize the solver and implement the MPC loop.
+This is realized in the function <code class="docutils literal notranslate"><span class="pre">main</span></code>, which is located in the file <code class="docutils literal notranslate"><span class="pre">reactor_simulation_main.cpp</span></code> for this example.
+First, the initial state <span class="math notranslate nohighlight">\(\vm x_0\)</span> is created as a Gaussian distribution with mean <span class="math notranslate nohighlight">\(\mathbb{E}[\vm x_0] = [0.7,\, 0.01]\trans\)</span> and covariance matrix <span class="math notranslate nohighlight">\(P = 10^{-5} \; \vm I\)</span>:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">Vector</span><span class="w"> </span><span class="nf">x0</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">Matrix</span><span class="w"> </span><span class="nf">P0</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">x0</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">;</span>
+<span class="n">P0</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mf">1e-5</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-5</span><span class="p">;</span>
+<span class="n">DistributionPtr</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Gaussian</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="w"> </span><span class="n">P0</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In principle, all methods from Section <a class="reference internal" href="deterministic_approx.html#chap-deterministic-approx"><span class="std std-ref">Approximation of the stochastic OCP</span></a> can be used to propagate the uncertainties.
+In this example we use polynomial chaos expansion with a maximum polynomial order of 2 and solve the occurring integrals using Gaussian quadrature with a grid of 3 points per dimension:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">PointTransformationPtr</span><span class="w"> </span><span class="n">transform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PCE</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="o">-&gt;</span><span class="n">polynomialFamily</span><span class="p">(),</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Next, the approximation of the probabilistic constraint is determined by the Chebyshev inequality:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">Vector</span><span class="w"> </span><span class="nf">vec_chance_constraint</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">vec_chance_constraint</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mf">0.95</span><span class="p">;</span>
+<span class="n">ChanceConstraintApproximationPtr</span><span class="w"> </span><span class="n">constraintApprox</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="n">Chebyshev</span><span class="p">(</span><span class="n">vec_chance_constraint</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The class <code class="docutils literal notranslate"><span class="pre">ReactorProblemDescription</span></code> has already been implemented in the previous steps.
+An object of this class is now created and passed to a <code class="docutils literal notranslate"><span class="pre">SigmaPointProblemDescription</span></code>:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">ProblemDescriptionPtr</span><span class="w"> </span><span class="n">reactorProblem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ProblemDescriptionPtr</span><span class="p">(</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ReactorProblemDescription</span><span class="p">(</span><span class="n">pSys</span><span class="p">,</span><span class="w"> </span><span class="n">pCost</span><span class="p">,</span><span class="w"> </span><span class="n">pCon</span><span class="p">));</span>
+<span class="n">SigmaPointProblemDescriptionPtr</span><span class="w"> </span><span class="n">problem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SigmaPointProblem</span><span class="p">(</span><span class="w"> </span><span class="n">reactorProblem</span><span class="p">,</span><span class="w"> </span><span class="n">constraintApprox</span><span class="p">,</span><span class="w"> </span><span class="n">transform</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">SigmaPointProblemDescription</span></code> represents the approximation of the stochastic OCP, which can be solved by GRAMPC.
+To this end, a solver must be created and the pointer to the problem description must be passed to it:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GrampcPtr</span><span class="w"> </span><span class="n">solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Solver</span><span class="p">(</span><span class="n">problem</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Next, the solver must be parameterized, which is skipped here for reasons of space, but can be found in the file <code class="docutils literal notranslate"><span class="pre">reactor_simulation_main.cpp</span></code>.
+Finally, the MPC loop is implemented.
+In each time step, the solver is called, the system is simulated and the current state and time are passed to the solver:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="n">typeRNum</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">Tsim</span><span class="p">;</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">dt_MPC</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span>
+
+<span class="w">    </span><span class="c1">//  simulate system</span>
+<span class="w">    </span><span class="n">Eigen</span><span class="o">::</span><span class="n">Map</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">Vector</span><span class="o">&gt;</span><span class="w"> </span><span class="n">uMap</span><span class="p">(</span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">getSolution</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">unext</span><span class="p">,</span><span class="w"> </span><span class="n">u0</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+<span class="w">    </span><span class="n">x0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sim</span><span class="p">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">uMap</span><span class="p">);</span>
+<span class="w">    </span><span class="n">state</span><span class="o">-&gt;</span><span class="n">setMeanAndCovariance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="w"> </span><span class="n">P0</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// set current state and time</span>
+<span class="w">    </span><span class="n">problem</span><span class="o">-&gt;</span><span class="n">compute_x0_and_p0</span><span class="p">(</span><span class="n">state</span><span class="p">);</span>
+<span class="w">    </span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">setparam_real_vector</span><span class="p">(</span><span class="s">&quot;x0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">problem</span><span class="o">-&gt;</span><span class="n">x0</span><span class="p">());</span>
+<span class="w">    </span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">setparam_real</span><span class="p">(</span><span class="s">&quot;t0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#fig-plot-results-reactor"><span class="std std-numref">Fig. 2</span></a> shows the results of the simulation for desired states <span class="math notranslate nohighlight">\(\vm x_\text{des} = [0.215, \,0.09]\trans\)</span> and a desired control input <span class="math notranslate nohighlight">\(u_\text{des} = 19.6\)</span>.
+First, the concentration <span class="math notranslate nohighlight">\(c_A\)</span> decreases and the concentration <span class="math notranslate nohighlight">\(c_B\)</span> increases until the constraint becomes active.
+The deviation between the trajectory of <span class="math notranslate nohighlight">\(c_B\)</span> and the value of 0.14 results from the constraint tightening with the Chebyshev inequality due to the state uncertainty.</p>
+<figure class="align-default" id="fig-plot-results-reactor">
+<img alt="_images/plot_reactor_results.svg" src="_images/plot_reactor_results.svg" />
+<figcaption>
+<p><span class="caption-number">Fig. 2 </span><span class="caption-text">Results of the stochastic MPC simulation for the chemical reactor.</span><a class="headerlink" href="#fig-plot-results-reactor" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<div class="docutils container" id="id4">
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="footcite-klattengell-95" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>K.–U. Klatt, S. Engell, A. Kremling, and F. Allgöwer. Testbeispiel: Rührkesselreaktor mit Parallel– und Folgereaktion. In S. Engell, editor, <em>Entwurf Nichtlineare Regelungen</em>, pages 425–432. Oldenbourg, 1995.</p>
+</aside>
+<aside class="footnote brackets" id="footcite-rothfuss19961433" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>R. Rothfuss, J. Rudolph, and M. Zeitz. Flatness based control of a nonlinear chemical reactor model. <em>Automatica</em>, 32(10):1433–1439, 1996.</p>
+</aside>
+<aside class="footnote brackets" id="footcite-graichen20041123" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">3</a><span class="fn-bracket">]</span></span>
+<p>Knut Graichen, Veit Hagenmeyer, and Michael Zeitz. Van de vusse CSTR as a benchmark problem for nonlinear feedforward control design techniques. <em>IFAC Proceedings Volumes</em>, 37(13):1123–1128, 2004.</p>
+</aside>
+</aside>
+</div>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="simulation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Simulation and Visualization</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="appendix.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Appendix</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Daniel Landgraf, Andreas Völz, Knut Graichen
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Daniel Landgraf, Andreas Völz, Knut Graichen.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,504 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Simulation and Visualization &#8212; grampc-s 1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=a681ed88"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'simulation';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example: Continuous stirred tank reactor" href="example.html" />
+    <link rel="prev" title="Approximation of the stochastic OCP" href="deterministic_approx.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">grampc-s 1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system_class.html">System class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deterministic_approx.html">Approximation of the stochastic OCP</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Simulation and Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example: Continuous stirred tank reactor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">Appendix</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/simulation.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Simulation and Visualization</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solver-and-simulator">Solver and Simulator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-grampc-s-with-matlab-simulink">Using GRAMPC-S with Matlab/Simulink</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="simulation-and-visualization">
+<span id="chap-simulation"></span><h1>Simulation and Visualization<a class="headerlink" href="#simulation-and-visualization" title="Link to this heading">#</a></h1>
+<p>This Section describes how open-loop and closed-loop simulations can be realized and how the results can be plotted.
+Section <a class="reference internal" href="#sec-solver"><span class="std std-ref">Solver and Simulator</span></a> describes the creation and parameterization of a solver as well as the simulation process including the saving of simulation data.
+Subsequently, Section <a class="reference internal" href="#sec-matlab-and-simulink"><span class="std std-ref">Using GRAMPC-S with Matlab/Simulink</span></a> shows how the results can be plotted in Matlab and how GRAMPC-S can be integrated into Simulink using an S-function.</p>
+<section id="solver-and-simulator">
+<span id="sec-solver"></span><h2>Solver and Simulator<a class="headerlink" href="#solver-and-simulator" title="Link to this heading">#</a></h2>
+<p>Once the approximation of the stochastic OCP has been selected as described in Section <a class="reference internal" href="deterministic_approx.html#chap-deterministic-approx"><span class="std std-ref">Approximation of the stochastic OCP</span></a>, a <code class="docutils literal notranslate"><span class="pre">GRAMPC</span></code> object can be created as a solver using the function</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GrampcPtr</span><span class="w"> </span><span class="n">Solver</span><span class="p">(</span><span class="n">ProblemDescriptionPtr</span><span class="w"> </span><span class="n">problemDescription</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">problemDescription</span></code> is a shared pointer to the stochastic problem description.
+Before this solver can be used, the initial states and parameters must be passed to it.
+Since the representation of states and parameters depends on the used propagation method, these must be calculated by the problem description.
+All problem descriptions provide the function</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">compute_x0_and_p0</span><span class="p">(</span><span class="n">DistributionPtr</span><span class="w"> </span><span class="n">state</span><span class="p">,</span><span class="w"> </span><span class="n">DistributionPtr</span><span class="w"> </span><span class="n">param</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>for this purpose.
+The initial states and parameters can then be accessed by the functions</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">ctypeRNum</span><span class="o">*</span><span class="w"> </span><span class="n">x0</span><span class="p">()</span>
+<span class="n">ctypeRNum</span><span class="o">*</span><span class="w"> </span><span class="n">p0</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>These can be passed directly to the solver with</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">setparam_real_vector</span><span class="p">(</span><span class="s">&quot;x0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">problem</span><span class="o">-&gt;</span><span class="n">x0</span><span class="p">());</span>
+<span class="n">solver</span><span class="o">-&gt;</span><span class="n">setparam_real_vector</span><span class="p">(</span><span class="s">&quot;p0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">problem</span><span class="o">-&gt;</span><span class="n">p0</span><span class="p">());</span>
+</pre></div>
+</div>
+<p>Next, options and parameters of the solver should be selected.
+For this purpose, the <code class="docutils literal notranslate"><span class="pre">GRAMPC</span></code> class provides the member functions</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">setopt_real</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">optName</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="w"> </span><span class="n">optValue</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">setopt_int</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">optName</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeInt</span><span class="w"> </span><span class="n">optValue</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">setopt_string</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">optName</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">optValue</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">setopt_real_vector</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">optName</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeRNum</span><span class="o">*</span><span class="w"> </span><span class="n">optValue</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">setopt_int_vector</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">optName</span><span class="p">,</span><span class="w"> </span><span class="n">ctypeInt</span><span class="o">*</span><span class="w"> </span><span class="n">optValue</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which call the corresponding GRAMPC functions.
+For details, please refer to the documentation of GRAMPC.
+Once the solver has been parameterized, it can be called as follows:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">-&gt;</span><span class="n">run</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The solution found for the OCP can then be read from the solver object.
+However, if a closed-loop simulation should be implemented, the actual system behavior must also be simulated, which may deviate from the model of the controller.
+For this purpose, GRAMPC-S provides the <code class="docutils literal notranslate"><span class="pre">Simulator</span></code> class, which receives the actual system dynamics, the actual initial states and system parameters.
+The system can either be simulated without noise, where you can choose between the Euler and Heun method for integration, or simulated with an additive Wiener process, where the Euler-Maruyama method is applied.
+If the <code class="docutils literal notranslate"><span class="pre">writeDataToFile</span></code> flag is set, the simulator writes the results of the simulation to text files, which can be plotted in Matlab.</p>
+</section>
+<section id="using-grampc-s-with-matlab-simulink">
+<span id="sec-matlab-and-simulink"></span><h2>Using GRAMPC-S with Matlab/Simulink<a class="headerlink" href="#using-grampc-s-with-matlab-simulink" title="Link to this heading">#</a></h2>
+<p>GRAMPC-S is programmed in C++ in order to realize low computation times and to enable implementation on embedded hardware.
+For reasons of simplicity, however, Matlab is used to plot the results.
+For this purpose, it is necessary to write the results to text files so they can be read into Matlab afterwards.
+If a closed-loop simulation is executed, this can be ensured by setting the argument <code class="docutils literal notranslate"><span class="pre">writeDataToFile</span></code> in the definition of the <code class="docutils literal notranslate"><span class="pre">Simulator</span></code> object.
+If no simulator is used because only the OCP is to be solved and the resulting trajectories should be plotted, this can be done with the function</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">writeTrajectoriesToFile</span><span class="p">(</span><span class="n">GrampcPtr</span><span class="w"> </span><span class="n">solver</span><span class="p">,</span><span class="w"> </span><span class="n">typeInt</span><span class="w"> </span><span class="n">numberOfStates</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A Matlab script can then be executed to plot the data. The <code class="docutils literal notranslate"><span class="pre">examples/TEMPLATES</span></code> folder contains three templates:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">plot_simulation</span></code>: This script plots the results of a closed-loop simulation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">plot_predicted_trajectories.m</span></code>: This script plots the obtained solution of the <a class="reference internal" href="system_class.html#eq-ocp-test"><span class="std std-ref">OCP</span></a> in the current time step for stochastic problem descriptions that represent the states internally in the form of sigma points. These are <code class="docutils literal notranslate"><span class="pre">SigmaPointProblemDescription</span></code> and <code class="docutils literal notranslate"><span class="pre">MonteCarloProblemDescription</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">plot_predicted_mean_covariance.m</span></code>: This script plots the found solution of the <a class="reference internal" href="system_class.html#eq-ocp-test"><span class="std std-ref">OCP</span></a> in the current time step for stochastic problem descriptions that represent the states internally in the form of mean and covariance matrix: These are <code class="docutils literal notranslate"><span class="pre">TaylorProblemDescription</span></code>, <code class="docutils literal notranslate"><span class="pre">ResamplingProblemDescription</span></code>, and <code class="docutils literal notranslate"><span class="pre">ResamplingGPProblemDescription</span></code>.</p></li>
+</ul>
+<figure class="align-default" id="fig-simulink">
+<img alt="_images/simulink.JPG" src="_images/simulink.JPG" />
+<figcaption>
+<p><span class="caption-number">Fig. 1 </span><span class="caption-text">Simulink model of GRAMPC-S.</span><a class="headerlink" href="#fig-simulink" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>GRAMPC-S can also be used in combination with Simulink. <a class="reference internal" href="#fig-simulink"><span class="std std-numref">Fig. 1</span></a> shows the Simulink model of GRAMPC-S, implemented using an S-function.
+By double-clicking on the button <code class="docutils literal notranslate"><span class="pre">Click</span> <span class="pre">to</span> <span class="pre">compile</span> <span class="pre">S-function</span></code>, the S-function is compiled and can be used for the simulation in Simulink.
+Before compiling, make sure that the folder containing the Simulink model is open in Matlab.
+The Simulink model shown in <a class="reference internal" href="#fig-simulink"><span class="std std-numref">Fig. 1</span></a> is located in the folder <code class="docutils literal notranslate"><span class="pre">examples/inverted_pendulum</span></code> and is designed for the example of an inverted pendulum.
+The S-function is implemented in the file <code class="docutils literal notranslate"><span class="pre">grampc_s_Sfct.cpp</span></code> in the same folder.
+The S-function must be adapted accordingly for use with other systems.
+The model parameters, such as sampling time, initial states, etc., are set in the <code class="docutils literal notranslate"><span class="pre">initFct</span></code> callback of the Simulink model, which can be found in <code class="docutils literal notranslate"><span class="pre">Modeling</span></code> → <code class="docutils literal notranslate"><span class="pre">Model</span> <span class="pre">Properties</span></code> → <code class="docutils literal notranslate"><span class="pre">Callbacks</span></code>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="deterministic_approx.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Approximation of the stochastic OCP</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="example.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Example: Continuous stirred tank reactor</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solver-and-simulator">Solver and Simulator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-grampc-s-with-matlab-simulink">Using GRAMPC-S with Matlab/Simulink</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Daniel Landgraf, Andreas Völz, Knut Graichen
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Daniel Landgraf, Andreas Völz, Knut Graichen.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

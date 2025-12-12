@@ -1,0 +1,553 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Approximation of the stochastic OCP &#8212; grampc-s 1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=a681ed88"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>window.MathJax = {"tex": {"macros": {"vm": ["\\boldsymbol{#1}", 1], "trans": ["^{\\mathrm{T}}"], "inv": ["^{-1}"], "diag": ["\\DeclareMathOperator*{\\diag}{diag}"], "gp": ["{\\mathcal{GP}"], "ex": ["\\mathds{E}\\left[#1\right]", 1]}}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'deterministic_approx';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Simulation and Visualization" href="simulation.html" />
+    <link rel="prev" title="Implementation" href="implementation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">grampc-s 1.0 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system_class.html">System class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Approximation of the stochastic OCP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.html">Simulation and Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example: Continuous stirred tank reactor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">Appendix</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/deterministic_approx.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Approximation of the stochastic OCP</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#approximation-of-probabilistic-constraints">Approximation of probabilistic constraints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stochastic-problem-descriptions-and-uncertainty-propagation">Stochastic problem descriptions and uncertainty propagation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#first-order-taylor-series-approximation">First-order Taylor series approximation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#point-based-uncertainty-propagation">Point-based uncertainty propagation</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="approximation-of-the-stochastic-ocp">
+<span id="chap-deterministic-approx"></span><h1>Approximation of the stochastic OCP<a class="headerlink" href="#approximation-of-the-stochastic-ocp" title="Link to this heading">#</a></h1>
+<p>The <a class="reference internal" href="system_class.html#eq-ocp-test"><span class="std std-ref">OCP</span></a> cannot be solved with common solvers, because the calculation of the probabilistic constraints requires the exact knowledge of the probability density functions of the predicted states.
+However, the exact propagation of the probability distributions for nonlinear functions can only be calculated by solving a partial differential equation.
+Therefore, several approximate methods of uncertainty propagation are implemented in GRAMPC-S.
+Their application is explained in Section <a class="reference internal" href="implementation.html#sec-implementation-random-variable"><span class="std std-ref">Implementation of random variables and Gaussian processes</span></a>.
+Since these only allow an evaluation of a finite number of stochastic moments, the probabilistic constraints must be approximated, which is described in Section <a class="reference internal" href="#sec-approx-constraints"><span class="std std-ref">Approximation of probabilistic constraints</span></a>.</p>
+<section id="approximation-of-probabilistic-constraints">
+<span id="sec-approx-constraints"></span><h2>Approximation of probabilistic constraints<a class="headerlink" href="#approximation-of-probabilistic-constraints" title="Link to this heading">#</a></h2>
+<p>For the computationally efficient solution of the <a class="reference internal" href="system_class.html#eq-ocp-test"><span class="std std-ref">OCP</span></a>, the probabilistic constraints must be converted into deterministic form.
+One possibility for this is the Chebyshev inequality, which specifies an upper limit for the probability of a deviation of a random variable from its mean based on the variance of the random variable.
+The class <code class="docutils literal notranslate"><span class="pre">ChebyshevConstraintApproximation</span></code> implements the approximation of a constraint with the Chebyshev inequality.
+An object of this class can be created using the constructor</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">ChebyshevConstraintApproximation</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Vector</span><span class="o">&amp;</span><span class="w"> </span><span class="n">probabilities</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">probabilities</span></code> describes the vector of probabilities <span class="math notranslate nohighlight">\(\vm \alpha\)</span> in the probabilistic constraints.
+If, in addition to the constraints, terminal constraints are to be taken into account, the concatenation of the vectors <span class="math notranslate nohighlight">\(\vm \alpha\)</span> and <span class="math notranslate nohighlight">\(\vm \alpha_T\)</span> is passed to the constructor.
+The Chebyshev inequality is valid for any probability density distribution with finite variance, so it is correspondingly conservative.
+A less conservative approximation of the probabilistic constraints can be realized if additional information about the distributions of the constraints is available.
+The approximation <code class="docutils literal notranslate"><span class="pre">SymmetricConstraintApproximation</span></code> assumes that the probability density distribution of the constraints is symmetric.
+The approximation can be even less conservative if it is assumed that the constraint distribution is Gaussian.
+This type of approximation is implemented in GRAMPC-S in the class <code class="docutils literal notranslate"><span class="pre">GaussianConstraintApproximation</span></code>.
+Objects of these classes can be created with</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">SymmetricConstraintApproximation</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Vector</span><span class="o">&amp;</span><span class="w"> </span><span class="n">probabilities</span><span class="p">)</span>
+<span class="n">GaussianConstraintApproximation</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Vector</span><span class="o">&amp;</span><span class="w"> </span><span class="n">probabilities</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="stochastic-problem-descriptions-and-uncertainty-propagation">
+<span id="sec-stochastic-probabiliy-description"></span><h2>Stochastic problem descriptions and uncertainty propagation<a class="headerlink" href="#stochastic-problem-descriptions-and-uncertainty-propagation" title="Link to this heading">#</a></h2>
+<p>The system dynamics <span class="math notranslate nohighlight">\(\vm f\)</span> are given in the form of a stochastic nonlinear differential equation.
+Common MPC solvers such as GRAMPC are unable to predict the probability distributions of the states for this class of differential equations.
+GRAMPC-S therefore implements several approximate methods of uncertainty propagation that transform the stochastic differential equation into an ordinary differential equation.
+These can be divided into two categories: Approximations of the nonlinear function <span class="math notranslate nohighlight">\(\vm f\)</span> and approximations of the stochastic moments by point-based representations.
+The linearization of the system function is explained in Section <a class="reference internal" href="#subsec-taylor"><span class="std std-ref">First-order Taylor series approximation</span></a>, the propagation of uncertainties based on sampling points is explained in Section <a class="reference internal" href="#subsec-sigma-point"><span class="std std-ref">Point-based uncertainty propagation</span></a>.</p>
+<section id="first-order-taylor-series-approximation">
+<span id="subsec-taylor"></span><h3>First-order Taylor series approximation<a class="headerlink" href="#first-order-taylor-series-approximation" title="Link to this heading">#</a></h3>
+<p>The consideration of nonlinear functions <span class="math notranslate nohighlight">\(\vm f\)</span> complicates the calculation of future state distributions.
+This can be easily avoided by linearizing the system dynamics <span class="math notranslate nohighlight">\(\vm f\)</span> around the current state and calculating the uncertainty propagation with the linearized dynamics.
+GRAMPC-S provides the class <code class="docutils literal notranslate"><span class="pre">TaylorProblemDescription</span></code> for this purpose.
+The constructor</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">TaylorProblemDescription</span><span class="p">(</span><span class="n">ProblemDescriptionPtr</span><span class="w"> </span><span class="n">problemDescription</span><span class="p">,</span><span class="w"> </span><span class="n">ChanceConstraintApproximationConstPtr</span><span class="w"> </span><span class="n">constraintApproximation</span><span class="p">,</span><span class="w"> </span><span class="n">MatrixConstRef</span><span class="w"> </span><span class="n">diffMatrixWienerProcess</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>receives a pointer <code class="docutils literal notranslate"><span class="pre">problemDescription</span></code> to the problem description that implements the system dynamics, the cost function and the constraints.
+Since the linearization of the system dynamics is based on the gradients of the system dynamics <span class="math notranslate nohighlight">\(\vm f\)</span> and GRAMPC in turn solves the optimization problem based on gradients, second-order derivatives are required in addition to the gradients of the functions, as described in Section <a class="reference internal" href="implementation.html#sec-implementation-problem"><span class="std std-ref">Implementation of the problem description</span></a>.
+Optionally, the type of constraint approximation and the diffusion matrix of the Wiener process <span class="math notranslate nohighlight">\(\vm \Sigma\)</span> are passed by the arguments <code class="docutils literal notranslate"><span class="pre">constraint-Approximation</span></code> and <code class="docutils literal notranslate"><span class="pre">diffMatrixWienerProcess</span></code>, respectively.
+Gaussian processes are not yet implemented in the class <code class="docutils literal notranslate"><span class="pre">TaylorProblemDescription</span></code>.</p>
+</section>
+<section id="point-based-uncertainty-propagation">
+<span id="subsec-sigma-point"></span><h3>Point-based uncertainty propagation<a class="headerlink" href="#point-based-uncertainty-propagation" title="Link to this heading">#</a></h3>
+<p>A further way to propagate uncertainties is to approximate probability density distributions by sampling.
+The nonlinear function <span class="math notranslate nohighlight">\(\vm f\)</span> can be evaluated for a set of sampling points and the stochastic moments of the propagated state distribution can be calculated from the results.
+This requires two things in GRAMPC-S: A transformation between stochastic moments and sampling points and a stochastic problem description that utilizes this transformation to approximately solve the <a class="reference internal" href="system_class.html#eq-ocp-test"><span class="std std-ref">OCP</span></a>.</p>
+<p>The following transformations between stochastic moments and points are implemented in GRAMPC-S, see <a class="footnote-reference brackets" href="#footcite-landgraf-2023" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> for details:</p>
+<ul class="simple">
+<li><p>Unscented transformation: This is implemented in the class <code class="docutils literal notranslate"><span class="pre">UnscentedTransformation</span></code> and requires the scaling parameters <span class="math notranslate nohighlight">\(\alpha\)</span>, <span class="math notranslate nohighlight">\(\beta\)</span>, and <span class="math notranslate nohighlight">\(\kappa\)</span>.</p></li>
+<li><p>First-order Stirling’s interpolation: The class <code class="docutils literal notranslate"><span class="pre">StirlingInterpolationFirstOrder</span></code> implements the first-order Stirling’s interpolation for an adjustable step size.</p></li>
+<li><p>Second-order Stirling’s interpolation: The Stirling’s interpolation of second order can be realized with the class <code class="docutils literal notranslate"><span class="pre">StirlingInterpolationSecondOrder</span></code>, where the step size can be specified as well.</p></li>
+<li><p>Gaussian quadrature: The class <code class="docutils literal notranslate"><span class="pre">ComposedQuadrature</span></code> generates quadrature points and associated weights for the multivariate Gaussian quadrature by composing it from the quadrature points of one-dimensional Gaussian quadratures. A family of orthogonal polynomials must be known for the respective one-dimensional distribution and the corresponding one-dimensional quadrature rule must be implemented. GRAMPC-S has implementations of the Gauss-Hermite quadrature for Gaussian distributions and the Gauss-Legendre quadrature for uniform distributions. However, it is possible to extend GRAMPC-S with your own quadrature rules by writing a class that inherits from the interface <code class="docutils literal notranslate"><span class="pre">QuadratureRule</span></code>. In addition to the vector of families of orthogonal polynomials, the constructor receives a vector with the orders of the quadrature rules. If a scalar is passed instead of a vector, this order is used for all quadrature rules.</p></li>
+<li><p>Polynomial chaos expansion (PCE): The class <code class="docutils literal notranslate"><span class="pre">PCE_Transformation</span></code> contains an implementation of polynomial chaos expansion, which solves the corresponding integrals by Gaussian quadrature and is therefore considered to be a point transformation as well. Its constructor takes the same arguments as the class <code class="docutils literal notranslate"><span class="pre">ComposedQuadrature</span></code> and also requires the specification of the maximum polynomial order.</p></li>
+<li><p>Monte Carlo sampling: A stochastic sampling of a probability density distribution is implemented in the class <code class="docutils literal notranslate"><span class="pre">MonteCarloTransformation</span></code>. The number of sampling points must be defined and a random number generator must be passed to the constructor.</p></li>
+</ul>
+<p>It is possible to implement your own point transformations and integrate them into <strong>GRAMPC-S</strong>.
+These must be derived classes of the abstract class <code class="docutils literal notranslate"><span class="pre">PointTransformation</span></code>.
+It should be noted that in addition to the calculation of the stochastic moments and points, the associated gradients must also be implemented, because the OCP is solved with a gradient-based approach.
+Some of the above point transformations have a second constructor that receives an argument <code class="docutils literal notranslate"><span class="pre">considerUncertain</span></code>.
+This is a vector of boolean values that sets for each variable whether it should be assumed to be uncertain or not. If the respective value is set to <code class="docutils literal notranslate"><span class="pre">false</span></code>, it is considered as a deterministic variable with the value of the mean of the distribution.
+Uncertainties whose impact is negligible can be ignored in this way, which reduces the number of points and thus the required computation time of the controller.
+The same can be achieved for Gaussian quadrature and PCE by setting the corresponding entry in vector <code class="docutils literal notranslate"><span class="pre">quadratureOrder</span></code> to 1.</p>
+<p>The above transformations can be used to represent probability density distributions by points and to calculate stochastic moments from transformed points.
+These transformations are used in several problem descriptions that convert the stochastic OCP into a deterministic OCP.
+The problem descriptions differ in particular in the internal representation of the states and in whether a Wiener process or a Gaussian process can be taken into account.
+An available implementation is the <code class="docutils literal notranslate"><span class="pre">SigmaPointProblemDescription</span></code>, which initially represents the random variables by points and predicts these points up to the prediction horizon.
+The implementation of the system dynamics, the cost function and the constraints are passed to the constructor</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">SigmaPointProblemDescription</span><span class="p">(</span><span class="n">ProblemDescriptionPtr</span><span class="w"> </span><span class="n">problemDescription</span><span class="p">,</span><span class="w"> </span><span class="n">ChanceConstraintApproximationConstPtr</span><span class="w"> </span><span class="n">constraintApproximation</span><span class="p">,</span><span class="w"> </span><span class="n">PointTransformationPtr</span><span class="w"> </span><span class="n">pointTransformation</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>as a pointer to a problem description.
+In addition, the type of constraint approximation and the transformation between points and stochastic moments are passed.
+The <code class="docutils literal notranslate"><span class="pre">SigmaPointProblemDescription</span></code> is computationally efficient, as the computation of points to represent the random variables is only performed once per time step.
+However, it is not possible to consider Gaussian processes or an additive Wiener process.
+To take these into account, it is not sufficient to initially convert the random variables into sampling points.
+Instead, differential equations for the mean and the covariance matrix of the states must be derived, which is implemented in the classes <code class="docutils literal notranslate"><span class="pre">ResamplingProblemDescription</span></code> and <code class="docutils literal notranslate"><span class="pre">ResamplingGPProblemDescription</span></code>.
+The integration of these differential equations requires a transformation of stochastic moments into sampling points at each discretization point of the numerical integration.
+The system dynamics <span class="math notranslate nohighlight">\(\vm f\)</span> is evaluated at these points and the time derivative of the mean and covariance matrix of the states is calculated from the results.
+An additive Wiener process can be taken into account by the class <code class="docutils literal notranslate"><span class="pre">ResamplingProblemDescription</span></code> by passing the diffusion matrix of the Wiener process to the constructor</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">ResamplingProblemDescription</span><span class="p">(...,</span><span class="w"> </span><span class="n">MatrixConstRef</span><span class="w"> </span><span class="n">diffMatrixWienerProcess</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A disadvantage of <code class="docutils literal notranslate"><span class="pre">ResamplingProblemDescription</span></code> compared to <code class="docutils literal notranslate"><span class="pre">SigmaPointProblemDescription</span></code> is the increased computation time, because the sampling points must be calculated more frequently.
+Furthermore, the class <code class="docutils literal notranslate"><span class="pre">ResamplingGPProblemDescription</span></code> can be used to consider a Gaussian process approximation of an unknown part of the system dynamics.
+For this purpose, the constructor</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">ResamplingGPProblemDescription</span><span class="p">(...,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">GaussianProcessPtr</span><span class="o">&gt;&amp;</span><span class="w">  </span><span class="n">gaussianProcessVec</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">typeInt</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">dynamicsIndicesWithGP</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>receives a vector of Gaussian processes <code class="docutils literal notranslate"><span class="pre">gaussianProcessVec</span></code>, which are created as described in Section <a class="reference internal" href="implementation.html#sec-implementation-random-variable"><span class="std std-ref">Implementation of random variables and Gaussian processes</span></a>.
+The output values of the Gaussian processes are each one-dimensional and are combined to obtain the vector <span class="math notranslate nohighlight">\(\vm g\)</span>.
+However, as a Gaussian process should not always be considered for all state differential equations, the argument <code class="docutils literal notranslate"><span class="pre">dynamicsIndicesWithGP</span></code> can be used to specify which state differential equations the Gaussian processes relate to.
+The size of vector <code class="docutils literal notranslate"><span class="pre">gaussianProcessVec</span></code> must be the same as the size of vector <code class="docutils literal notranslate"><span class="pre">dynamicsIndicesWithGP</span></code>.</p>
+<p>A further approximation of the stochastic <a class="reference internal" href="system_class.html#eq-ocp-test"><span class="std std-ref">OCP</span></a> is implemented in the class <code class="docutils literal notranslate"><span class="pre">MonteCarlo-ProblemDescription</span></code>, which provides the constructor</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">MonteCarloProblemDescription</span><span class="p">(</span><span class="n">ProblemDescriptionPtr</span><span class="w"> </span><span class="n">problemDescription</span><span class="p">,</span><span class="w">  </span><span class="n">PointTransformationPtr</span><span class="w"> </span><span class="n">pointTransformation</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As in <code class="docutils literal notranslate"><span class="pre">SigmaPointProblemDescription</span></code>, the random variables are initially converted into sampling points, but the probabilistic constraints are not approximated.
+Instead, all sampling points must fulfill the deterministic constraints.
+In combination with Monte Carlo sampling, the confidence of the fulfillment of the probabilistic constraints can be stated.
+The confidence increases with an increasing number of sampling points, however, the corresponding computation time increases as well.</p>
+<div class="docutils container" id="id2">
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="footcite-landgraf-2023" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Daniel Landgraf, Andreas Völz, Felix Berkel, Kevin Schmidt, Thomas Specker, and Knut Graichen. Probabilistic prediction methods for nonlinear systems with application to stochastic model predictive control. <em>Annual Reviews in Control</em>, 56:100905, 2023.</p>
+</aside>
+</aside>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="implementation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Implementation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="simulation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Simulation and Visualization</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#approximation-of-probabilistic-constraints">Approximation of probabilistic constraints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stochastic-problem-descriptions-and-uncertainty-propagation">Stochastic problem descriptions and uncertainty propagation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#first-order-taylor-series-approximation">First-order Taylor series approximation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#point-based-uncertainty-propagation">Point-based uncertainty propagation</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Daniel Landgraf, Andreas Völz, Knut Graichen
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, Daniel Landgraf, Andreas Völz, Knut Graichen.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
