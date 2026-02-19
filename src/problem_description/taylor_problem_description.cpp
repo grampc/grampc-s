@@ -117,7 +117,7 @@ namespace grampc
         d_stateParamCov.noalias() = dfdx_ * stateParamCov +  dfdp_ * paramCov;
     }
 
-    void TaylorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void TaylorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> stateCov(x.data() + numStates_, numStates_, numStates_);
@@ -171,7 +171,7 @@ namespace grampc
         }
     }
 
-    void TaylorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void TaylorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
     {
         // Mapping of the inputs
         Eigen::Map<const Matrix> stateCov(x.data() + numStates_, numStates_, numStates_);
