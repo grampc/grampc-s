@@ -284,32 +284,165 @@ namespace grampc
 
     void ResamplingProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->lfct(out, t, x, u, p, param);
+        Eigen::Map<const Vector> stateMean(x.data(), numStates_);
+        Eigen::Map<const Matrix> cov(x.data() + numStates_, pointDim_, numStates_);
+
+        // Covariance matrix of states and parameter, bottom right corner is set in compute_x0_and_p0() and top right corner is not read
+        covStateAndParam_.leftCols(numStates_) = cov;
+
+        // Mean and Cholesky decomposition of the covariance matrix
+        meanStateAndParam_.topRows(numStates_) = stateMean;
+        const Matrix& covCholStateAndParam_ = llt_.compute(covStateAndParam_).matrixLLT();
+
+        // Generate points
+        const Matrix& pointsInitial_ = pointTransformation_->points(meanStateAndParam_, covCholStateAndParam_);
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            // cost function
+            problemDescription_->lfct(pointsTransformed_.col(i), t, pointsInitial_.col(i).head(numStates_), u, pointsInitial_.col(i).segment(numStates_, numParams_), param);
+        }
+        // compute mean of cost function, mean1D since the cost is a scalar function and only the first element is set
+        out[0] = pointTransformation_->mean1D(pointsTransformed_.row(0));
     }
 
     void ResamplingProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dldx(out, t, x, u, p, param);
+        Eigen::Map<const Vector> stateMean(x.data(), numStates_);
+        Eigen::Map<const Matrix> cov(x.data() + numStates_, pointDim_, numStates_);
+
+        // Mapping of the outputs
+        Eigen::Map<Vector> out_mean(out.data(), numStates_);
+        Eigen::Map<Matrix> out_cov(out.data() + numStates_, pointDim_, numStates_);
+
+        // Covariance matrix of states and parameter, bottom right corner is set in compute_x0_and_p0() and top right corner is not read
+        covStateAndParam_.leftCols(numStates_) = cov;
+
+        // Mean and Cholesky decomposition of the covariance matrix
+        meanStateAndParam_.topRows(numStates_) = stateMean;
+        const Matrix& covCholStateAndParam_ = llt_.compute(covStateAndParam_).matrixLLT();
+
+        // Generate points
+        const Matrix& pointsInitial_ = pointTransformation_->points(meanStateAndParam_, covCholStateAndParam_);
+
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            // cost function
+            problemDescription_->dldx(pointsTransformed_.col(i), t, pointsInitial_.col(i).head(numStates_), u, pointsInitial_.col(i).segment(numStates_, numParams_), param);
+            // weight_i * Y_i
+            temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_) = dmean1D_dPoints_(i) * pointsTransformed_.col(i);
+        }
+
+        // sum(weight_i * Y_i)
+        out_mean = pointTransformation_->mean(pointsTransformed_);
+        // sum(weight_i * Y_i * dX/dvec(cov))
+        out_cov = pointTransformation_->dpoints_dcov_vec(covCholStateAndParam_, temp_vec_pointDim_numPoints_);
     }
 
     void ResamplingProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dldu(out, t, x, u, p, param);
+        Eigen::Map<const Vector> stateMean(x.data(), numStates_);
+        Eigen::Map<const Matrix> cov(x.data() + numStates_, pointDim_, numStates_);
+
+        // Mapping of the outputs
+        Eigen::Map<Vector> out_mean(out.data(), numStates_);
+
+        // Covariance matrix of states and parameter, bottom right corner is set in compute_x0_and_p0() and top right corner is not read
+        covStateAndParam_.leftCols(numStates_) = cov;
+
+        // Mean and Cholesky decomposition of the covariance matrix
+        meanStateAndParam_.topRows(numStates_) = stateMean;
+        const Matrix& covCholStateAndParam_ = llt_.compute(covStateAndParam_).matrixLLT();
+
+        // Generate points
+        const Matrix& pointsInitial_ = pointTransformation_->points(meanStateAndParam_, covCholStateAndParam_);
+
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            // cost function
+            problemDescription_->dldu(pointsTransformed_.col(i), t, pointsInitial_.col(i).head(numStates_), u, pointsInitial_.col(i).segment(numStates_, numParams_), param);
+        }
+        // Time derivative of the mean
+        out_mean = pointTransformation_->mean(pointsTransformed_);
     }
 
     void ResamplingProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->Vfct(out, t, x, p, param);
+        Eigen::Map<const Vector> stateMean(x.data(), numStates_);
+        Eigen::Map<const Matrix> cov(x.data() + numStates_, pointDim_, numStates_);
+
+        // Covariance matrix of states and parameter, bottom right corner is set in compute_x0_and_p0() and top right corner is not read
+        covStateAndParam_.leftCols(numStates_) = cov;
+
+        // Mean and Cholesky decomposition of the covariance matrix
+        meanStateAndParam_.topRows(numStates_) = stateMean;
+        const Matrix& covCholStateAndParam_ = llt_.compute(covStateAndParam_).matrixLLT();
+
+        // Generate points
+        const Matrix& pointsInitial_ = pointTransformation_->points(meanStateAndParam_, covCholStateAndParam_);
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            // cost function
+            problemDescription_->Vfct(pointsTransformed_.col(i), t, pointsInitial_.col(i).head(numStates_), pointsInitial_.col(i).segment(numStates_, numParams_), param);
+        }
+        // compute mean of cost function
+        out[0] = pointTransformation_->mean1D(pointsTransformed_.row(0));
     }
 
     void ResamplingProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-        problemDescription_->dVdx(out, t, x, p, param);
+        Eigen::Map<const Vector> stateMean(x.data(), numStates_);
+        Eigen::Map<const Matrix> cov(x.data() + numStates_, pointDim_, numStates_);
+
+        // Mapping of the outputs
+        Eigen::Map<Vector> out_mean(out.data(), numStates_);
+        Eigen::Map<Matrix> out_cov(out.data() + numStates_, pointDim_, numStates_);
+
+        // Covariance matrix of states and parameter, bottom right corner is set in compute_x0_and_p0() and top right corner is not read
+        covStateAndParam_.leftCols(numStates_) = cov;
+
+        // Mean and Cholesky decomposition of the covariance matrix
+        meanStateAndParam_.topRows(numStates_) = stateMean;
+        const Matrix& covCholStateAndParam_ = llt_.compute(covStateAndParam_).matrixLLT();
+
+        // Generate points
+        const Matrix& pointsInitial_ = pointTransformation_->points(meanStateAndParam_, covCholStateAndParam_);
+
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            // cost function
+            problemDescription_->dVdx(pointsTransformed_.col(i), t, pointsInitial_.col(i).head(numStates_), pointsInitial_.col(i).segment(numStates_, numParams_), param);
+            // weight_i * Y_i
+            temp_vec_pointDim_numPoints_.segment(i*pointDim_, numStates_) = dmean1D_dPoints_(i) * pointsTransformed_.col(i);
+        }
+
+        // sum(weight_i * Y_i)
+        out_mean = pointTransformation_->mean(pointsTransformed_);
+        // sum(weight_i * Y_i * dX/dvec(cov))
+        out_cov = pointTransformation_->dpoints_dcov_vec(covCholStateAndParam_, temp_vec_pointDim_numPoints_);
     }
 
     void ResamplingProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
     {
-       problemDescription_->dVdT(out, t, x, p, param);
+        Eigen::Map<const Vector> stateMean(x.data(), numStates_);
+        Eigen::Map<const Matrix> cov(x.data() + numStates_, pointDim_, numStates_);
+
+        // Covariance matrix of states and parameter, bottom right corner is set in compute_x0_and_p0() and top right corner is not read
+        covStateAndParam_.leftCols(numStates_) = cov;
+
+        // Mean and Cholesky decomposition of the covariance matrix
+        meanStateAndParam_.topRows(numStates_) = stateMean;
+        const Matrix& covCholStateAndParam_ = llt_.compute(covStateAndParam_).matrixLLT();
+
+        // Generate points
+        const Matrix& pointsInitial_ = pointTransformation_->points(meanStateAndParam_, covCholStateAndParam_);
+
+        for(typeInt i = 0; i < numSigmaPoints_; ++i)
+        {
+            // cost function
+            problemDescription_->dVdT(pointsTransformed_.col(i), t, pointsInitial_.col(i).head(numStates_), pointsInitial_.col(i).segment(numStates_, numParams_), param);
+        }
+        // Time derivative of the mean
+        out[0] = pointTransformation_->mean1D(pointsTransformed_.row(0));
     }
 
     void ResamplingProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
