@@ -246,7 +246,8 @@ namespace grampc
 
     const Matrix& UnscentedTransformation::dpoints_dcov_vec(MatrixConstRef covCholesky, VectorConstRef vec)
     {
-        // Vector of points 1 ... n minus Vector of points n+1 ... 2*n
+        // vec is a the vector of possibly transformed sigma points Y. The first dimX points are ignored since they are only the mean, thus no dependence on the Cov.
+        // Collapse the dimX * (2*dimX+1) vector to a dimX * dimX vector, resulting in 2*sqrt(Cov)
         vecDiff_ = vec.segment(dimX_, dimX_ * dimX_).transpose() - vec.segment(dimX_ * (dimX_ + 1 ), dimX_ * dimX_).transpose();
 
         // scaling factor
