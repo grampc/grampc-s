@@ -72,6 +72,7 @@ namespace grampc
         return out;
     }
 
+    // based on: "Stochastic model predictive control of nonlinear continuous-time systems using the unscented transformation," 2015 European Control Conference (ECC)
     void deriveCholesky(VectorRef out, MatrixConstRef chol, typeInt k, typeInt l)
     {
         typeRNum sum;
