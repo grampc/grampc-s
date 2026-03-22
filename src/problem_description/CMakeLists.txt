@@ -13,4 +13,5 @@ target_sources(grampc-s PRIVATE
 	problem_description.cpp
 	taylor_problem_description.cpp
 	resampling_problem_description.cpp
-	resampling_GP_problem_description.cpp)
+	resampling_GP_problem_description.cpp
+)

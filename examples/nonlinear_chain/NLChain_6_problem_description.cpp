@@ -24,27 +24,13 @@ using namespace grampc;
 
 
 Chain_6_ProblemDescription::Chain_6_ProblemDescription(const std::vector<typeRNum>& pCost)
-: pCost_(pCost)
+: TaylorBaseProblemDescription(33, 3, 0, 0, 0, 0, 0), pCost_(pCost)
 {
 }
-
-/** OCP dimensions: states (Nx), controls (Nu), parameters (Np), equalities (Ng),
-    inequalities (Nh), terminal equalities (NgT), terminal inequalities (NhT) **/
-void Chain_6_ProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-{
-    *Nx  = 33;
-    *Nu  = 3;
-    *Np  = 0;
-    *Nh  = 0;
-    *Ng  = 0;
-    *NgT = 0;
-    *NhT = 0;
-}
-
 
 /** System function f(t,x,u,p,userparam)
     ------------------------------------ **/
-void Chain_6_ProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     ctypeRNum  t2 = x[0]*x[0];
     ctypeRNum  t3 = x[1]*x[1];
@@ -167,7 +153,7 @@ void Chain_6_ProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef
 
 
 /** Jacobian df/dx multiplied by vector vec, i.e. (df/dx)^T*vec or vec^T*(df/dx) **/
-void Chain_6_ProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     ctypeRNum  t2 = x[0]*2.0;
     ctypeRNum  t3 = x[1]*2.0;
@@ -385,7 +371,7 @@ void Chain_6_ProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorCons
 
 
 /** Jacobian df/du multiplied by vector vec, i.e. (df/du)^T*vec or vec^T*(df/du) **/
-void Chain_6_ProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = vec[30];
     out[1] = vec[31];
@@ -394,14 +380,14 @@ void Chain_6_ProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorCons
 
 
 /** Jacobian df/dp multiplied by vector vec, i.e. (df/dp)^T*vec or vec^T*(df/dp) **/
-void Chain_6_ProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
 
 
 /** Integral cost l(t,x(t),u(t),p,xdes,udes,userparam) 
     -------------------------------------------------- **/
-void Chain_6_ProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     
 
@@ -410,7 +396,7 @@ void Chain_6_ProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef
 
 
 /** Gradient dl/dx **/
-void Chain_6_ProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     
 
@@ -451,7 +437,7 @@ void Chain_6_ProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef
 
 
 /** Gradient dl/du **/
-void Chain_6_ProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     
 
@@ -463,14 +449,14 @@ void Chain_6_ProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef
 
 /** Terminal cost V(T,x(T),p,xdes,userparam) 
     ---------------------------------------- **/
-void Chain_6_ProblemDescription::Vfct(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::Vfct(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = 0.0;
 }
 
 
 /** Gradient dV/dx **/
-void Chain_6_ProblemDescription::dVdx(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dVdx(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = 0.0;
     out[1] = 0.0;
@@ -508,7 +494,7 @@ void Chain_6_ProblemDescription::dVdx(VectorRef out, ctypeRNum T, VectorConstRef
 }
 
 /** Gradient dV/dT **/
-void Chain_6_ProblemDescription::dVdT(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dVdT(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = 0.0;
 }
@@ -516,43 +502,43 @@ void Chain_6_ProblemDescription::dVdT(VectorRef out, ctypeRNum T, VectorConstRef
 
 /** Inequality constraints h(t,x(t),u(t),p,uperparam) <= 0 
     ------------------------------------------------------ **/
-void Chain_6_ProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
 }
 
 
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
-void Chain_6_ProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
 
 
 /** Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dg/du) **/
-void Chain_6_ProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
 
 
 /** Terminal inequality constraints hT(T,x(T),p,uperparam) <= 0 
     ----------------------------------------------------------- **/
-void Chain_6_ProblemDescription::hTfct(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::hTfct(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
 }
 
 
 /** Jacobian dhT/dx multiplied by vector vec, i.e. (dhT/dx)^T*vec or vec^T*(dhT/dx) **/
-void Chain_6_ProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
 
 /** Jacobian dhT/dT multiplied by vector vec, i.e. (dhT/dT)^T*vec or vec^T*(dhT/dT) **/
-void Chain_6_ProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum T, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
 
 
 /** Jacobian df/dx in vector form (column-wise) **/
-void Chain_6_ProblemDescription::dfdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Chain_6_ProblemDescription::dfdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     ctypeRNum  t2 = x[0]*2.0;
     ctypeRNum  t3 = x[1]*2.0;

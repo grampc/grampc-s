@@ -23,17 +23,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 cmake_policy(SET CMP0015 NEW)
 
 # Eigen 3.4.90 is required
-find_package(Eigen3 3.4.90 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(grampc)
 
 include_directories(
 	include
-	libs/grampc/include
 )
 
 # Add library and link Eigen
 add_library(grampc-s)
-target_link_libraries(grampc-s Eigen3::Eigen)
+target_link_libraries(grampc-s Eigen3::Eigen grampc)
 
 add_subdirectory(examples)
-add_subdirectory(libs)
 add_subdirectory(src)

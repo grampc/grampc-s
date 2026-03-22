@@ -19,86 +19,76 @@
 ReactorProblemDescription::ReactorProblemDescription(const std::vector<typeRNum>& pSys,
                                                      const std::vector<typeRNum>& pCost,
                                                      const std::vector<typeRNum>& pCon)
-    : pSys_(pSys), pCost_(pCost), pCon_(pCon)
+ : ProblemDescription(2, 1, 0, 0, 1, 0, 0), 
+   pSys_(pSys), pCost_(pCost), pCon_(pCon)
 {
 }
 
-void ReactorProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-{
-    *Nx = 2;
-    *Nu = 1;
-    *Np = 0;
-    *Ng = 0;
-    *Nh = 1;
-    *NgT = 0;
-    *NhT = 0;
-}
-
-void ReactorProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = -pSys_[0] * x[0] - pSys_[2] * x[0] * x[0] + (1 - x[0]) * u[0];
     out[1] = pSys_[0] * x[0] - pSys_[1] * x[1] - x[1] * u[0];
 }
 
-void ReactorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = (-pSys_[0] - pSys_[2] * 2 * x[0] - u[0]) * adj[0] + pSys_[0] * adj[1];
     out[1] = (-pSys_[1] - u[0]) * adj[1];
 }
 
-void ReactorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef adj, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = (1 - x[0]) * adj[0] + (-x[1]) * adj[1];
 }
 
-void ReactorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
-    ctypeRNum *udes = param->udes;
+    auto& xdes = param.xdes;
+    auto& udes = param.udes;
     out[0] = pCost_[2] * (x[0] - xdes[0]) * (x[0] - xdes[0]) +
              pCost_[3] * (x[1] - xdes[1]) * (x[1] - xdes[1]) +
              pCost_[4] * (u[0] - udes[0]) * (u[0] - udes[0]);
 }
 
-void ReactorProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
     out[0] = 2 * pCost_[2] * (x[0] - xdes[0]);
     out[1] = 2 * pCost_[3] * (x[1] - xdes[1]);
 }
 
-void ReactorProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *udes = param->udes;
+    auto& udes = param.udes;
     out[0] = 2 * pCost_[4] * (u[0] - udes[0]);
 }
 
-void ReactorProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
     out[0] = pCost_[0] * (x[0] - xdes[0]) * (x[0] - xdes[0]) +
              pCost_[1] * (x[1] - xdes[1]) * (x[1] - xdes[1]);
 }
 
-void ReactorProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
     out[0] = 2 * pCost_[0] * (x[0] - xdes[0]);
     out[1] = 2 * pCost_[1] * (x[1] - xdes[1]);
 }
 
-void ReactorProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void ReactorProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = x[1] - pCon_[0];
 }
 
-void ReactorProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void ReactorProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = 0.0;
     out[1] = vec[0];
 }
 
-void ReactorProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void ReactorProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = 0.0;
 }

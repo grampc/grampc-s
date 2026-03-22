@@ -44,28 +44,18 @@ First, the constructor is implemented:
     ReactorProblemDescription::ReactorProblemDescription(const std::vector<typeRNum>& pSys,
                                                         const std::vector<typeRNum>& pCost, 
                                                         const std::vector<typeRNum>& pCon)
-     : pSys_(pSys), pCost_(pCost), pCon_(pCon)
+     : ProblemDescription(2, 1, 0, 0, 1, 0, 0), 
+       pSys_(pSys), pCost_(pCost), pCon_(pCon)
     {}
 
 The constructor receives vectors containing the system parameters, the coefficients for the cost function and for the constraint and saves them in member variables.
-Next, the number of states, the number of control inputs, the number of parameters, the number of constraints and the number of terminal constraints of the OCP must be specified.
-This is realized in the function ``ocp_dim``:
+In the initializer list the number of states, control inputs, parameters, and constraints is passed to the base class ``ProblemDescription``.
 
-.. code-block:: C++
-
-    void ReactorProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-    {
-        *Nx = 2;  *Nu = 1;  *Np = 0;  *Ng = 0;
-        *Nh = 1;  *NgT = 0;  *NhT = 0; 
-    }
-
-Please note that the generic data type ``typeInt`` for integer values is used here which is defined by GRAMPC in ``grampc_macro.h``.
-The generic data types ``typeRNum`` and ``ctypeRNum`` for floating point numbers are also defined there. 
 The system dynamics in :math:numref:`eq:reactor_dyn` are implemented in the function ``ffct``:
 
 .. code-block:: C++
 
-    void ReactorProblemDescription::ffct(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::ffct(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         out[0] = -pSys_[0] * x[0] - pSys_[2] * x[0] * x[0] + (1 - x[0]) * u[0];
         out[1] = pSys_[0] * x[0] - pSys_[1] * x[1] - x[1] * u[0]; 
@@ -76,10 +66,10 @@ Next, the cost function must be implemented in the function ``lfct``:
 
 .. code-block:: C++
 
-    void ReactorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
-        ctypeRNum *xdes = param->xdes;
-        ctypeRNum *udes = param->udes;
+        auto& xdes = param.xdes;
+        auto& udes = param.udes;
         out[0] = pCost_[2] * (x[0] - xdes[0]) * (x[0] - xdes[0]) +
         pCost_[3] * (x[1] - xdes[1]) * (x[1] - xdes[1]) +
         pCost_[4] * (u[0] - udes[0]) * (u[0] - udes[0]);
@@ -91,7 +81,7 @@ The inequality constraint is implemented in the function ``hfct``:
 
 .. code-block:: C++
 
-    void ReactorProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     { 
         out[0] = x[1] - pCon_[0];  
     }
@@ -101,37 +91,37 @@ As described in Section :ref:`sec:implementation_problem`, the matrix product of
 
 .. code-block:: C++
 
-    void ReactorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param)
     {
         out[0] = (-pSys_[0] - pSys_[2] * 2 * x[0] - u[0]) * adj[0] + pSys_[0] * adj[1];
         out[1] = (-pSys_[1] - u[0]) * adj[1];
     }
 
-    void ReactorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param)
     {
         out[0] = (1 - x[0]) * adj[0] + (-x[1]) * adj[1];
     }
 
-    void ReactorProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
-        ctypeRNum *xdes = param->xdes;
+        auto& xdes = param.xdes
         out[0] = 2 * pCost_[2] * (x[0] - xdes[0]);
         out[1] = 2 * pCost_[3] * (x[1] - xdes[1]);
     }
 
-    void ReactorProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x,  VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
-        ctypeRNum *udes = param->udes;
+        auto& udes = param.udes;
         out[0] = 2 * pCost_[4] * (u[0] - udes[0]);
     }
 
-    void ReactorProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {
         out[0] = 0.0;
         out[1] = vec[0];
     }
 
-    void ReactorProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void ReactorProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t,  VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {
         out[0] = 0.0;
     }

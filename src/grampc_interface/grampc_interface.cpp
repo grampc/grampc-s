@@ -11,9 +11,74 @@
 
 
 #include "grampc_interface/grampc_interface.hpp"
+#include "python/pygrampc_types.hpp"
 
 namespace grampc
 {
+
+    GrampcParam::GrampcParam()
+        : x0(NULL, 0), xdes(NULL, 0), u0(NULL, 0), udes(NULL, 0),
+        umax(NULL, 0), umin(NULL, 0), p0(NULL, 0), pmax(NULL, 0), pmin(NULL, 0)
+    {}
+
+    GrampcParam::GrampcParam(const typeGRAMPCparam* param)
+        : Nx(&param->Nx),
+          Nu(&param->Nu),
+          Np(&param->Np),
+          Ng(&param->Ng),
+          Nh(&param->Nh),
+          NgT(&param->NgT),
+          NhT(&param->NhT),
+          Nc(&param->Nc),
+          x0(param->x0, *Nx), 
+          xdes(param->xdes, *Nx), 
+          u0(param->u0, *Nu), 
+          udes(param->udes, *Nu),
+          umax(param->umax, *Nu), 
+          umin(param->umin, *Nu), 
+          p0(param->p0, *Np), 
+          pmax(param->pmax, *Np), 
+          pmin(param->pmin, *Np),
+          Thor(&param->Thor),
+          Tmax(&param->Tmax),
+          Tmin(&param->Tmin),
+          dt(&param->dt),
+          t0(&param->t0)
+    {}
+
+    void GrampcParam::remap_memory(const typeGRAMPC *grampc)
+    {
+        Nx = &grampc->param->Nx;
+        Nu = &grampc->param->Nu;
+        Np = &grampc->param->Np;
+        Ng = &grampc->param->Ng;
+        Nh = &grampc->param->Nh;
+        NgT = &grampc->param->NgT;
+        NhT = &grampc->param->NhT;
+        Nc = &grampc->param->Nc;
+
+        // placement new uses the preallocated memory of the Eigen::Map types on the stack, so no delete has to be called
+        // this is the way to go according to the Eigen documentation: https://eigen.tuxfamily.org/dox/classEigen_1_1Map.html
+        new (&x0) Eigen::Map<Vector> (grampc->param->x0, grampc->param->Nx);
+        new (&xdes) Eigen::Map<Vector>(grampc->param->xdes, grampc->param->Nx);
+
+        new (&u0) Eigen::Map<Vector>(grampc->param->u0, grampc->param->Nu);
+        new (&udes) Eigen::Map<Vector>(grampc->param->udes, grampc->param->Nu);
+        new (&umax) Eigen::Map<Vector>(grampc->param->umax, grampc->param->Nu);
+        new (&umin) Eigen::Map<Vector>(grampc->param->umin, grampc->param->Nu);
+
+        new (&p0) Eigen::Map<Vector>(grampc->param->p0, grampc->param->Np);
+        new (&pmax) Eigen::Map<Vector>(grampc->param->pmax, grampc->param->Np);
+        new (&pmin) Eigen::Map<Vector>(grampc->param->pmin, grampc->param->Np);
+
+        Thor = &grampc->param->Thor;
+        Tmax = &grampc->param->Tmax;
+        Tmin = &grampc->param->Tmin;
+
+        dt = &grampc->param->dt;
+        t0 = &grampc->param->t0;
+    }
+
 	Grampc::Grampc(ProblemDescriptionPtr problem_description)
 		: problem_description_(problem_description)
 	{

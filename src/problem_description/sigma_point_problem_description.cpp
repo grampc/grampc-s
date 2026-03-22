@@ -16,17 +16,28 @@ namespace grampc
 {
     SigmaPointProblemDescription::SigmaPointProblemDescription(ProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,
                                  PointTransformationPtr pointTransformation)
-        : numSigmaPoints_(pointTransformation->numberOfPoints()),
+        : ProblemDescription(
+            problemDescription->Nx * pointTransformation->numberOfPoints(), 
+            problemDescription->Nu, 
+            problemDescription->Np * pointTransformation->numberOfPoints(),
+            0,
+            problemDescription->Nh,
+            0,
+            problemDescription->NhT
+        ),
+          numSigmaPoints_(pointTransformation->numberOfPoints()),
           problemDescription_(problemDescription),
           pointTransformation_(pointTransformation),
           constraintTighteningCoeff_(constraintApproximation->tighteningCoefficient()),
           tempScalar_(1)
     {
-        typeInt Ng, NgT;
-
-        // Call ocp_dim to get the number of states, controls, parameters, and constraints
-        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, &Ng, &numConstraints_, &NgT, &numTerminalConstraints_); 
-
+        // get the number of states, controls, parameters, and constraints of base problem description
+        numStates_ = problemDescription_->Nx;
+        numControlInputs_ = problemDescription_->Nu;
+        numParams_ = problemDescription_->Np;
+        numConstraints_ = problemDescription_->Nh;
+        numTerminalConstraints_ = problemDescription_->NhT;
+        
         // Distribution of states and parameters
         stateAndParam_ = MultiDist({Dist(numStates_), Dist(numParams_)});
 
@@ -44,13 +55,6 @@ namespace grampc
         terminalConstraintStdDev_ = Vector::Zero(numTerminalConstraints_);
         terminalConstraintVec_ = Matrix::Zero(numTerminalConstraints_, numSigmaPoints_);
         dmean_dPoints_ = pointTransformation_->dmean1D_dpoints().transpose();
-
-        // Array dimensions
-        Nx_ = numSigmaPoints_ * numStates_;
-        Np_ = numSigmaPoints_ * numParams_;
-        Nu_ = numControlInputs_;
-        Nh_ = numConstraints_;
-        NhT_ = numTerminalConstraints_; 
     }
 
     SigmaPointProblemDescription::SigmaPointProblemDescription(ProblemDescriptionPtr problemDescription, PointTransformationPtr pointTransformation)
@@ -62,18 +66,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-    {
-        *Nx = Nx_;
-        *Np = Np_;
-        *Nu = Nu_;
-        *Nh = Nh_;
-        *NhT = NhT_;
-        *Ng = 0;
-        *NgT = 0;
-    }
-
-    void SigmaPointProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // f of all sigma points
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -82,7 +75,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param)
     {
         // dfdx of all sigma points
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -91,7 +84,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param)
     {
         // dfdu_vec of the first sigma point
         problemDescription_->dfdu_vec(out, t, x, u, p, adj, param);
@@ -104,7 +97,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // Cost of each sigmapoint
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -116,7 +109,7 @@ namespace grampc
         out(0) = pointTransformation_->mean1D(temp_vec_numSigmaPoints_); 
     }
 
-    void SigmaPointProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // Output Matrix
         Eigen::Map<Matrix> outMat(out.data(), numStates_, numSigmaPoints_);
@@ -129,7 +122,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // dldu of the first sigma point
         problemDescription_->dldu(temp_vec_numInputs_, t, x, u, p, param);
@@ -143,7 +136,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
     {
         // Cost of each sigmapoint
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -155,7 +148,7 @@ namespace grampc
         out(0) = pointTransformation_->mean1D(temp_vec_numSigmaPoints_);
     }
 
-    void SigmaPointProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
     {
         // Output Matrix
         Eigen::Map<Matrix> outMat(out.data(), numStates_, numSigmaPoints_);
@@ -168,7 +161,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
     {
         // dVdT of the first sigma point
         problemDescription_->dVdT(out, t, x, p, param);
@@ -182,7 +175,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // Evaluate constraints for each sigma point
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
@@ -201,7 +194,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {   
         // Compute the derivative of the tightened constraint with respect to the constraints of the sigma points
         for(typeInt i = 0; i < numConstraints_; ++i)
@@ -216,7 +209,7 @@ namespace grampc
         } 
     }
 
-    void SigmaPointProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {
         out.setZero();
 
@@ -229,7 +222,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
     {
         // Evaluate the terminal constraints for each sigma point
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
@@ -248,7 +241,7 @@ namespace grampc
         }
     }
 
-    void SigmaPointProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {
         // Compute the derivative of the tightened constraint with respect to the terminal constraints of the sigma points
         for(typeInt i = 0; i < numTerminalConstraints_; ++i)
@@ -263,7 +256,7 @@ namespace grampc
         } 
     }
 
-    void SigmaPointProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void SigmaPointProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {
         out[0] = 0.0;
 

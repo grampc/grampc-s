@@ -14,271 +14,421 @@
 
 extern "C"
 {
-	void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT, typeUSERPARAM *userparam)
-	{
-		((grampc::ProblemDescription*)userparam)->ocp_dim(Nx, Nu, Np, Ng, Nh, NgT, NhT);
-	}
+    void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT, typeUSERPARAM *userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        *Nx = problem->Nx;
+        *Nu = problem->Nu;
+        *Np = problem->Np;
+        *Ng = problem->Ng;
+        *Nh = problem->Nh;
+        *NgT = problem->NgT;
+        *NhT = problem->NhT;
+    }
 
-	void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nx_);
+    void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
 
-		((grampc::ProblemDescription*)userparam)->ffct(outMap, t, xMap, uMap, pMap, param);
-	}
+        problem->ffct(outMap, t, xMap, uMap, pMap, paramMap);
+    }
+    
+    void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dfdx_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-	void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *adj, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> adjMap(adj, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nx_);
+    void dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nu);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dfdu_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dfdx_vec(outMap, t, xMap, uMap, pMap, adjMap, param);
-	}
+    void dfdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Np);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dfdp_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-	void dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *adj, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> adjMap(adj, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nu_);
+    void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, 1);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->lfct(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dfdu_vec(outMap, t, xMap, uMap, pMap, adjMap, param);
-	}
+    void dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dldx(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
-	void dfdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *adj, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> adjMap(adj, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Np_);
+    void dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nu);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dldu(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dfdp_vec(outMap, t, xMap, uMap, pMap, adjMap, param);
-	}
+    void dldp(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Np);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dldp(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
+    void Vfct(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, 1);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->Vfct(outMap, T, xMap, pMap, paramMap);
+    }
 
-	void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, 1);
+    void dVdx(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dVdx(outMap, T, xMap, pMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->lfct(outMap, t, xMap, uMap, pMap, param);
-	}
+    void dVdp(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Np);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dVdp(outMap, T, xMap, pMap, paramMap);
+    }
 
-	void dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nx_);
+    void dVdT(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, 1);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dVdT(outMap, T, xMap, pMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dldx(outMap, t, xMap, uMap, pMap, param);
-	}
+    void gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Ng);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->gfct(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
-	void dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nu_);
+    void dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Ng);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dgdx_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dldu(outMap, t, xMap, uMap, pMap, param);
-	}
+    void dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nu);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Ng);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dgdu_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-	void dldp(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Np_);
+    void dgdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Np);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Ng);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dgdp_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dldp(outMap, t, xMap, uMap, pMap, param);
-	}
+    void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nh);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->hfct(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
+    void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Nh);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dhdx_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-	void Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, 1);
+    void dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nu);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Nh);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dhdu_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->Vfct(outMap, t, xMap, pMap, param);
-	}
+    void dhdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Np);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Nh);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dhdp_vec(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-	void dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nx_);
+    void gTfct(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->NgT);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->gTfct(outMap, T, xMap, pMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dVdx(outMap, t, xMap, pMap, param);
-	}
+    void dgTdx_vec(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->NgT);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dgTdx_vec(outMap, T, xMap, pMap, vecMap, paramMap);
+    }
 
-	void dVdp(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Np_);
+    void dgTdp_vec(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Np);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->NgT);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dgTdp_vec(outMap, T, xMap, pMap, vecMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dVdp(outMap, t, xMap, pMap, param);
-	}
+    void dgTdT_vec(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, 1);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->NgT);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dgTdT_vec(outMap, T, xMap, pMap, vecMap, paramMap);
+    }
 
-	void dVdT(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, 1);
+    void hTfct(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->NhT);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->hTfct(outMap, T, xMap, pMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->dVdT(outMap, t, xMap, pMap, param);
-	}
+    void dhTdx_vec(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->NhT);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dhTdx_vec(outMap, T, xMap, pMap, vecMap, paramMap);
+    }
 
+    void dhTdp_vec(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Np);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->NhT);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
 
-	void gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-	}
+        problem->dhTdp_vec(outMap, T, xMap, pMap, vecMap, paramMap);
+    }
 
-	void dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
-	{
-	}
+    void dhTdT_vec(typeRNum *out, ctypeRNum T, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, 1);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->NhT);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dhTdT_vec(outMap, T, xMap, pMap, vecMap, paramMap);
+    }
 
-	void dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-	}
+    void dfdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Rodas_Jac); //Nx * (MLJAC + MUJAC + 1)
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dfdx(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
-	void dgdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-	}
+    void dfdxtrans(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Rodas_Jac); //Nx * (MLJAC + MUJAC + 1)
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dfdxtrans(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
+    void dfdt(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dfdt(outMap, t, xMap, uMap, pMap, paramMap);
+    }
 
-	void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nh_);
+    void dHdxdt(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Nx);
+        Eigen::Map<const grampc::Vector> xMap(x, problem->Nx);
+        Eigen::Map<const grampc::Vector> vecMap(vec, problem->Nx);
+        Eigen::Map<const grampc::Vector> uMap(u, problem->Nu);
+        Eigen::Map<const grampc::Vector> pMap(p, problem->Np);
+        grampc::GrampcParam paramMap(param);
+        
+        problem->dHdxdt(outMap, t, xMap, uMap, pMap, vecMap, paramMap);
+    }
 
-		((grampc::ProblemDescription*)userparam)->hfct(outMap, t, xMap, uMap, pMap, param);
-	}
+    void Mfct(typeRNum *out, const typeGRAMPCparam *param, typeUSERPARAM *userparam) // Auf Python Seite eine Matrix?
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Rodas_M); //Nx * (MLMAS + MUMAS + 1)
+        grampc::GrampcParam paramMap(param);
+        
+        problem->Mfct(outMap, paramMap);
+    }
 
-	void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<const grampc::Vector> vecMap(vec, ((grampc::ProblemDescription*)userparam)->Nh_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nx_);
-
-		((grampc::ProblemDescription*)userparam)->dhdx_vec(outMap, t, xMap, uMap, pMap, vecMap, param);
-	}
-
-	void dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<const grampc::Vector> vecMap(vec, ((grampc::ProblemDescription*)userparam)->Nh_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nu_);
-
-		((grampc::ProblemDescription*)userparam)->dhdu_vec(outMap, t, xMap, uMap, pMap, vecMap, param);
-	}
-
-	void dhdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> uMap(u, ((grampc::ProblemDescription*)userparam)->Nu_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<const grampc::Vector> vecMap(vec, ((grampc::ProblemDescription*)userparam)->Nh_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Np_);
-
-		((grampc::ProblemDescription*)userparam)->dhdp_vec(outMap, t, xMap, uMap, pMap, vecMap, param);
-	}
-
-
-	void gTfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-	}
-
-	void dgTdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-	}
-
-	void dgTdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-	}
-
-	void dgTdT_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-	}
-
-
-	void hTfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->NhT_);
-
-		((grampc::ProblemDescription*)userparam)->hTfct(outMap, t, xMap, pMap, param);
-	}
-
-	void dhTdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<const grampc::Vector> vecMap(vec, ((grampc::ProblemDescription*)userparam)->NhT_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Nx_);
-
-		((grampc::ProblemDescription*)userparam)->dhTdx_vec(outMap, t, xMap, pMap, vecMap, param);
-	}
-
-	void dhTdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<const grampc::Vector> vecMap(vec, ((grampc::ProblemDescription*)userparam)->NhT_);
-		Eigen::Map<grampc::Vector> outMap(out, ((grampc::ProblemDescription*)userparam)->Np_);
-
-		((grampc::ProblemDescription*)userparam)->dhTdp_vec(outMap, t, xMap, pMap, vecMap, param);
-	}
-
-	void dhTdT_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam *param, typeUSERPARAM* userparam)
-	{
-		Eigen::Map<const grampc::Vector> xMap(x, ((grampc::ProblemDescription*)userparam)->Nx_);
-		Eigen::Map<const grampc::Vector> pMap(p, ((grampc::ProblemDescription*)userparam)->Np_);
-		Eigen::Map<const grampc::Vector> vecMap(vec, ((grampc::ProblemDescription*)userparam)->NhT_);
-		Eigen::Map<grampc::Vector> outMap(out, 1);
-
-		((grampc::ProblemDescription*)userparam)->dhTdT_vec(outMap, t, xMap, pMap, vecMap, param);
-	}
-
-	void dfdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
-	{
-	}
-
-	void dfdxtrans(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
-	{
-	}
-
-	void dfdt(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
-	{
-	}
-
-	void dHdxdt(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *adj, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
-	{
-	}
-
-	void Mfct(typeRNum *out, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
-	{
-	}
-
-	void Mtrans(typeRNum *out, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
-	{
-	}
+    void Mtrans(typeRNum *out, const typeGRAMPCparam *param, typeUSERPARAM *userparam)
+    {
+        grampc::ProblemDescription* problem = (grampc::ProblemDescription*) userparam;
+        Eigen::Map<grampc::Vector> outMap(out, problem->Rodas_M); //Nx * (MLMAS + MUMAS + 1)
+        grampc::GrampcParam paramMap(param);
+        
+        problem->Mtrans(outMap, paramMap);
+    }
 }

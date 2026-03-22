@@ -60,7 +60,7 @@ int main()
     ChanceConstraintApproximationPtr constraintApprox = GaussianApprox(vec_chance_constraint);
 
     // create nominal problem description
-    ProblemDescriptionPtr pendulumProblem = ProblemDescriptionPtr(new InvertedPendulumProblemDescription(pSys, pCost, pCon));
+    TaylorBaseProblemDescriptionPtr pendulumProblem = TaylorBaseProblemDescriptionPtr(new InvertedPendulumProblemDescription(pSys, pCost, pCon));
 
     // configure stochastic problem description
     TaylorProblemDescriptionPtr problem = TaylorProblem(pendulumProblem, constraintApprox, WienerProcessDiffusionMatirx);

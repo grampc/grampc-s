@@ -103,7 +103,7 @@ int main()
 
   // create solver
   GrampcPtr solver = Solver(problem);
-  const typeGRAMPCparam *par = solver->getParameters();
+  const GrampcParam par(solver->getParameters());
 
   // simulator
   SystemFct trueSystemFunction = std::bind(&ProblemDescription::ffct, chainProblem, _1, _2, _3, _4, _5, par);
@@ -115,7 +115,7 @@ int main()
   solver->setparam_real_vector("p0", problem->p0());
 
   // resize vectors
-  xdes.resize(par->Nx, 0.0);
+  xdes.resize(*par.Nx, 0.0);
 
   // set parameters
   solver->setparam_real("Thor", Thor);

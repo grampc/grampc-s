@@ -12,96 +12,90 @@
 #include "double_integrator_GP_problem_description.hpp"
 
 DoubleIntegratorGPProblemDescription::DoubleIntegratorGPProblemDescription(const std::vector<typeRNum>& pCost, const std::vector<typeRNum>& pCon)
-    : pCost_(pCost), pCon_(pCon)
+    : ProblemDescription(2, 1, 0, 1, 0, 0, 0), pCost_(pCost), pCon_(pCon)
 {
 }
 
-void DoubleIntegratorGPProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-{
-    *Nx = 2;
-	*Nu = 1;
-	*Np = 0;
-	*Nh = 1;
-	*Ng = 0;
-	*NgT = 0;
-	*NhT = 0;
-}
-
-void DoubleIntegratorGPProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = 0;
 	out[1] = 0;
 }
 
-void DoubleIntegratorGPProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = 0;
 	out[1] = 0;
 }
 
-void DoubleIntegratorGPProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = 0;
 }
 
-void DoubleIntegratorGPProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
 
-void DoubleIntegratorGPProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
-    ctypeRNum *udes = param->udes;
+    auto& xdes = param.xdes;
+    auto& udes = param.udes;
+
     out[0] = pCost_[0] * (u[0] - udes[0]) * (u[0] - udes[0]) + pCost_[1] * (x[0] - xdes[0]) * (x[0] - xdes[0]) + pCost_[2] * (x[1] - xdes[1]) * (x[1] - xdes[1]);
 }
 
-void DoubleIntegratorGPProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
+    
     out[0] = 2 * pCost_[1] * (x[0] - xdes[0]);
     out[1] = 2 * pCost_[2] * (x[1] - xdes[1]);
 }
 
-void DoubleIntegratorGPProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *udes = param->udes;
+    auto& udes = param.udes;
+
 	out[0] = 2 * pCost_[0] * (u[0] - udes[0]);
 }
 
-void DoubleIntegratorGPProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
+    
     out[0] = pCost_[3] * (x[0] - xdes[0]) * (x[0] - xdes[0]) + pCost_[4] * (x[1] - xdes[1]) * (x[1] - xdes[1]) +  pCost_[5] * t;
 }
 
-void DoubleIntegratorGPProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
+    
     out[0] = 2 * pCost_[3] * (x[0] - xdes[0]);
     out[1] = 2 * pCost_[4] * (x[1] - xdes[1]);
 }
 
-void DoubleIntegratorGPProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = pCost_[5];
 }
 
-void DoubleIntegratorGPProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = -x[1] + pCon_[0]; 
 }
 
-void DoubleIntegratorGPProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = 0;
     out[1] = -vec[0];
 }
 
-void DoubleIntegratorGPProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = 0;
 }
 
-void DoubleIntegratorGPProblemDescription::dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void DoubleIntegratorGPProblemDescription::dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
