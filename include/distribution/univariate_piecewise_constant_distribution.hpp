@@ -29,7 +29,7 @@ namespace grampc
         virtual const Vector& sample(RandomNumberGenerator& rng) const override;
     
     private:
-        typeRNum mean(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity);
+        typeRNum mean_(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity);
         typeRNum variance(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity);
 
         std::vector<typeRNum> intervalLimits_;

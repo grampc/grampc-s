@@ -35,7 +35,7 @@ namespace grampc
         const std::vector<PolynomialConstPtr>& polynomials() const;
 
         // Get one polynomial
-        PolynomialConstPtr polynomials(typeInt index) const;
+        // PolynomialConstPtr polynomials(typeInt index) const;
 
         // Get number of variables
         typeInt numVariables() const;
