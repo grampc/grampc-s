@@ -10,8 +10,8 @@
 target_sources(grampc-s PRIVATE 
 	monte_carlo_problem_description.cpp
 	sigma_point_problem_description.cpp
-	problem_description.cpp
 	taylor_problem_description.cpp
 	resampling_problem_description.cpp
 	resampling_GP_problem_description.cpp
+	PUBLIC problem_description.cpp
 )
