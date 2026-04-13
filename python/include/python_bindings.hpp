@@ -2,7 +2,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
-#include <pybind11/native_enum.h>
+// #include <pybind11/native_enum.h>
 #include "problem_description/problem_description.hpp"
 
 namespace py = pybind11;

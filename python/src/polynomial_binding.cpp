@@ -9,11 +9,11 @@ using namespace grampc;
 
 void init_polynomial(py::module_ &m)
 {
-    py::native_enum<PolynomialFamily>(m, "PolynomialFamily", "enum.Enum")
+    py::enum_<PolynomialFamily>(m, "PolynomialFamily")
         .value("NONE", PolynomialFamily::NONE)
         .value("HERMITE", PolynomialFamily::HERMITE)
         .value("LEGENDRE", PolynomialFamily::LEGENDRE)
-        .finalize();
+        .export_values();
 
     py::class_<Polynomial, PolynomialPtr>(m, "Polynomial")
         .def(py::init<>())
