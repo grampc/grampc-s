@@ -35,8 +35,6 @@ add_library(grampc-s)
 target_link_libraries(grampc-s Eigen3::Eigen grampc)
 add_subdirectory(src)
 
-set(PYTHON ON)
-
 if(PYTHON)
 	add_subdirectory(python)
 else()
