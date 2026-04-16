@@ -689,14 +689,14 @@ namespace grampc
         }
     }
 
-    ctypeRNum* ResamplingGPProblemDescription::x0()
+    const Vector ResamplingGPProblemDescription::x0()
     {
-        return x0_.data();
+        return x0_;
     }
 
-    ctypeRNum* ResamplingGPProblemDescription::p0()
+    const Vector ResamplingGPProblemDescription::p0()
     {
-        return p0_.data();
+        return p0_;
     }
 
     ResamplingGPProblemDescriptionPtr ResamplingGPProblem(ProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,

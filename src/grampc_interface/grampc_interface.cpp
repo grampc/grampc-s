@@ -113,12 +113,20 @@ namespace grampc
 		grampc_setopt_string(grampc_, optName, optValue);
 	}
 
-	void Grampc::setopt_real_vector(const char *optName, ctypeRNum *optValue)
+	void Grampc::setopt_real_vector(const char *optName, VectorConstRef optValue)
+	{
+		grampc_setopt_real_vector(grampc_, optName, optValue.data());
+	}
+	void Grampc::setopt_real_vector(const char *optName, ctypeRNum* optValue)
 	{
 		grampc_setopt_real_vector(grampc_, optName, optValue);
 	}
 
-	void Grampc::setopt_int_vector(const char *optName, ctypeInt *optValue)
+	void Grampc::setopt_int_vector(const char *optName, IntVectorConstRef optValue)
+	{
+		grampc_setopt_int_vector(grampc_, optName, optValue.data());
+	}
+	void Grampc::setopt_int_vector(const char *optName, ctypeInt* optValue)
 	{
 		grampc_setopt_int_vector(grampc_, optName, optValue);
 	}
@@ -134,7 +142,11 @@ namespace grampc
 		grampc_setparam_real(grampc_, paramName, paramValue);
 	}
 
-	void Grampc::setparam_real_vector(const char *paramName, ctypeRNum *paramValue)
+	void Grampc::setparam_real_vector(const char *paramName, VectorConstRef paramValue)
+	{
+		grampc_setparam_real_vector(grampc_, paramName, paramValue.data());
+	}
+	void Grampc::setparam_real_vector(const char *paramName, ctypeRNum* paramValue)
 	{
 		grampc_setparam_real_vector(grampc_, paramName, paramValue);
 	}

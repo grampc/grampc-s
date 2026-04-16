@@ -292,14 +292,14 @@ namespace grampc
         p0_ = points.bottomRows(numParams_);
     }
 
-    ctypeRNum* SigmaPointProblemDescription::x0()
+    const Vector SigmaPointProblemDescription::x0()
     {
-        return x0_.data();
+        return x0_;
     }
 
-    ctypeRNum* SigmaPointProblemDescription::p0()
+    const Vector SigmaPointProblemDescription::p0()
     {
-        return p0_.data();
+        return p0_;
     }
 
     SigmaPointProblemDescriptionPtr SigmaPointProblem(ProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation,

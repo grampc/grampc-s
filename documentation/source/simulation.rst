@@ -32,8 +32,8 @@ The initial states and parameters can then be accessed by the functions
 
 .. code-block:: C++
 
-    ctypeRNum* x0()
-    ctypeRNum* p0()
+    const Vector x0()
+    const Vector p0()
 
 These can be passed directly to the solver with
 

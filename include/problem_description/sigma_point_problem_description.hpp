@@ -98,10 +98,10 @@ namespace grampc
         void compute_x0_and_p0(DistributionPtr state);
 
         // Return initial state
-        ctypeRNum* x0();
+        const Vector x0();
 
         // Return parameters
-        ctypeRNum* p0();
+        const Vector p0();
 
     private:  
         typeInt numSigmaPoints_;

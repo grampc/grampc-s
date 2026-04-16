@@ -44,9 +44,11 @@ namespace grampc
 		void setopt_string(const char* optName, const char* optValue);
 
 		/** Set option with float/double vector value */
+		void setopt_real_vector(const char* optName, VectorConstRef optValue);
 		void setopt_real_vector(const char* optName, ctypeRNum* optValue);
 
 		/** Set option with int vector value */
+		void setopt_int_vector(const char* optName, IntVectorConstRef optValue);
 		void setopt_int_vector(const char* optName, ctypeInt* optValue);
 
 		/** Print options */
@@ -56,6 +58,7 @@ namespace grampc
 		void setparam_real(const char* paramName, ctypeRNum paramValue);
 
 		/** Set parameter with float/double vector value */
+		void setparam_real_vector(const char* paramName, VectorConstRef paramValue);
 		void setparam_real_vector(const char* paramName, ctypeRNum* paramValue);
 
 		/** Print parameters */

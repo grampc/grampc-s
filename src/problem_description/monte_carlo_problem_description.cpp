@@ -233,14 +233,14 @@ namespace grampc
         p0_ = points.bottomRows(numParams_);
     }
 
-    ctypeRNum* MonteCarloProblemDescription::x0()
+    const Vector MonteCarloProblemDescription::x0()
     {
-        return x0_.data();
+        return x0_;
     }
 
-    ctypeRNum* MonteCarloProblemDescription::p0()
+    const Vector MonteCarloProblemDescription::p0()
     {
-        return p0_.data();
+        return p0_;
     }
 
     MonteCarloProblemDescriptionPtr MonteCarloProblem(ProblemDescriptionPtr problemDescription, PointTransformationPtr pointTransformation)

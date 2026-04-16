@@ -411,14 +411,14 @@ namespace grampc
         x0_(Eigen::all, Eigen::seqN(1+numStates_, numParams_)).setZero();
     }
 
-    ctypeRNum* TaylorProblemDescription::x0()
+    const Vector TaylorProblemDescription::x0()
     {
-        return x0_.data();
+        return x0_;
     }
 
-    ctypeRNum* TaylorProblemDescription::p0()
+    const Vector TaylorProblemDescription::p0()
     {
-        return p0_.data();
+        return p0_;
     }
 
     TaylorProblemDescriptionPtr TaylorProblem(TaylorBaseProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation)
