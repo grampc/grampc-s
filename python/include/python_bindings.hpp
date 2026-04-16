@@ -3,6 +3,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 // #include <pybind11/native_enum.h>
+#include "distribution/distribution.hpp"
 #include "problem_description/problem_description.hpp"
 
 namespace py = pybind11;
@@ -21,8 +22,8 @@ void init_polynomial(py::module &);
 template <typename Class>
 void problem_methods(py::class_<Class, grampc::ProblemDescription, std::shared_ptr<Class>> &cls)
 {
-    cls.def("compute_x0_and_p0", overload_cast_<DistributionPtr>()(&Class::compute_x0_and_p0));
-    cls.def("compute_x0_and_p0", overload_cast_<DistributionPtr, DistributionPtr>()(&Class::compute_x0_and_p0));
+    cls.def("compute_x0_and_p0", overload_cast_<grampc::DistributionPtr>()(&Class::compute_x0_and_p0));
+    cls.def("compute_x0_and_p0", overload_cast_<grampc::DistributionPtr, grampc::DistributionPtr>()(&Class::compute_x0_and_p0));
     cls.def_property_readonly("x0", &Class::x0);
     cls.def_property_readonly("p0", &Class::p0);
 }
