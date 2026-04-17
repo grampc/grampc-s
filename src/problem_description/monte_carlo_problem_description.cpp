@@ -15,46 +15,39 @@
 namespace grampc
 {
     MonteCarloProblemDescription::MonteCarloProblemDescription(ProblemDescriptionPtr problemDescription, PointTransformationPtr pointTransformation)
-        : numSigmaPoints_(pointTransformation->numberOfPoints()),
+        : ProblemDescription(
+            problemDescription->Nx * pointTransformation->numberOfPoints(), 
+            problemDescription->Nu, 
+            problemDescription->Np * pointTransformation->numberOfPoints(),
+            0,
+            problemDescription->Nh * pointTransformation->numberOfPoints(),
+            0,
+            problemDescription->NhT * pointTransformation->numberOfPoints()
+        ),
+          numSigmaPoints_(pointTransformation->numberOfPoints()),
           problemDescription_(problemDescription),
           pointTransformation_(pointTransformation),
           tempScalar_(1)
     {
-        typeInt Ng, NgT;
-
-        // Call ocp_dim to get the number of states, controls, parameters, and constraints
-        problemDescription_->ocp_dim(&numStates_, &numControlInputs_, &numParams_, &Ng, &numConstraints_, &NgT, &numTerminalConstraints_);
+        // get the number of states, controls, parameters, and constraints of base problem description
+        numStates_ = problemDescription_->Nx;
+        numControlInputs_ = problemDescription_->Nu;
+        numParams_ = problemDescription_->Np;
+        numConstraints_ = problemDescription_->Nh;
+        numTerminalConstraints_ = problemDescription_->NhT;
 
         // Distribution of states and parameters
         stateAndParam_ = MultiDist({Dist(numStates_), Dist(numParams_)});
 
         // allocate memory
-        x0_ = Matrix::Zero(numStates_, numSigmaPoints_);
-        p0_ = Matrix::Zero(numParams_, numSigmaPoints_);
+        x0_ = Vector::Zero(numStates_ * numSigmaPoints_);
+        p0_ = Vector::Zero(numParams_ * numSigmaPoints_);
         temp_vec_numInputs_ = Vector::Zero(numControlInputs_);
         temp_vec_numSigmaPoints_ = RowVector::Zero(numSigmaPoints_);
         dmean_dPoints_ = pointTransformation_->dmean1D_dpoints().transpose();
-
-        // Array dimensions
-        Nx_ = numSigmaPoints_ * numStates_;
-        Np_ = numSigmaPoints_ * numParams_;
-        Nu_ = numControlInputs_;
-        Nh_ = numConstraints_ * numSigmaPoints_;
-        NhT_ = numTerminalConstraints_ * numSigmaPoints_;
     }
 
-    void MonteCarloProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-    {
-        *Nx = Nx_;
-        *Np = Np_;
-        *Nu = Nu_;
-        *Nh = Nh_;
-        *NhT = NhT_;
-        *Ng = 0;
-        *NgT = 0;
-    }
-
-    void MonteCarloProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // f of all sigma points
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -65,7 +58,7 @@ namespace grampc
         // or with a dedicated integrator (Euler-Maruyama integration) since the noise is not differentiable
     }
 
-    void MonteCarloProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param)
     {
         // dfdx of all sigma points
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -74,7 +67,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param)
     {
         // dfdu_vec of the first sigma point
         problemDescription_->dfdu_vec(out, t, x, adj, u, p, param);
@@ -87,7 +80,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // Cost of each sigmapoint
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -99,7 +92,7 @@ namespace grampc
         out[0] = pointTransformation_->mean1D(temp_vec_numSigmaPoints_); 
     }
 
-    void MonteCarloProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // dl_dx_ij = dmean_dpoints__j * dpoint_j/dx_ij
         for(typeInt j = 0; j < numSigmaPoints_; ++j)
@@ -109,7 +102,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // dldu of the first sigma point
         problemDescription_->dldu(temp_vec_numInputs_, t, x, u, p, param);
@@ -123,7 +116,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
     {
         // Cost of each sigmapoint
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -135,7 +128,7 @@ namespace grampc
         out[0] = pointTransformation_->mean1D(temp_vec_numSigmaPoints_);
     }
 
-    void MonteCarloProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
     {
         // dV_dx_ij = dmean_dpoints__j * dpoint_j/dx_ij
         for(typeInt j = 0; j < numSigmaPoints_; ++j)
@@ -145,7 +138,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
     {
         // dVdT of the first sigma point
         problemDescription_->dVdT(out, t, x, p, param);
@@ -159,7 +152,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
     {
         // Inequality constraint of all samples
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
@@ -168,7 +161,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {   
         // dhdx of all samples
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -177,7 +170,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {
         out.setZero();
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
@@ -188,7 +181,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
     {
         // Terminal inequality constraint of all samples
         for (typeInt i = 0; i < numSigmaPoints_; ++i)
@@ -197,7 +190,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {
         // dhTdx of all samples
         for (int i = 0; i < numSigmaPoints_; ++i)
@@ -206,7 +199,7 @@ namespace grampc
         }
     }
 
-    void MonteCarloProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+    void MonteCarloProblemDescription::dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
     {
         out[0] = 0.0;
         for(typeInt i = 0; i < numSigmaPoints_; ++i)
@@ -225,8 +218,10 @@ namespace grampc
 
         // Compute state and parameter points and copy them to matrices of the correct size
         const Matrix& points = pointTransformation_->points(stateAndParam_);
-        x0_ = points.topRows(numStates_);
-        p0_ = points.bottomRows(numParams_);
+        x0_ = points.topRows(numStates_).reshaped(numStates_ * numSigmaPoints_, 1);
+        p0_ = points.bottomRows(numParams_).reshaped(numParams_ * numSigmaPoints_, 1);
+        // x0_ = points.topRows(numStates_);
+        // p0_ = points.bottomRows(numParams_);
     }
 
     void MonteCarloProblemDescription::compute_x0_and_p0(DistributionPtr state)
@@ -236,18 +231,20 @@ namespace grampc
 
         // Compute state and parameter points and copy them to matrices of the correct size
         const Matrix& points = pointTransformation_->points(stateAndParam_);
-        x0_ = points.topRows(numStates_);
-        p0_ = points.bottomRows(numParams_);
+        x0_ = points.topRows(numStates_).reshaped(numStates_ * numSigmaPoints_, 1);
+        p0_ = points.bottomRows(numParams_).reshaped(numParams_ * numSigmaPoints_, 1);
+        // x0_ = points.topRows(numStates_);
+        // p0_ = points.bottomRows(numParams_);
     }
 
-    ctypeRNum* MonteCarloProblemDescription::x0()
+    const Vector MonteCarloProblemDescription::x0()
     {
-        return x0_.data();
+        return x0_;
     }
 
-    ctypeRNum* MonteCarloProblemDescription::p0()
+    const Vector MonteCarloProblemDescription::p0()
     {
-        return p0_.data();
+        return p0_;
     }
 
     MonteCarloProblemDescriptionPtr MonteCarloProblem(ProblemDescriptionPtr problemDescription, PointTransformationPtr pointTransformation)

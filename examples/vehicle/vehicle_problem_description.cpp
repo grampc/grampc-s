@@ -25,23 +25,13 @@
 #define POW2(a) ((a)*(a))
 
 VehicleProblemDescription::VehicleProblemDescription(const std::vector<typeRNum>& pSys, const std::vector<typeRNum>& pCost)
-: pSys_(pSys),
+: ProblemDescription(5, 2, 0, 1, 0, 0, 0),
+  pSys_(pSys),
   pCost_(pCost)
 {
 }
 
-void VehicleProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-{
-    *Nx = 5;
-	*Nu = 2;
-	*Np = 0;
-	*Nh = 1;
-	*Ng = 0;
-	*NgT = 0;
-	*NhT = 0;
-}
-
-void VehicleProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void VehicleProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = std::cos(x[2])*x[4];
 	out[1] = std::sin(x[2])*x[4];
@@ -50,7 +40,7 @@ void VehicleProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef 
 	out[4] = u[1];
 }
 
-void VehicleProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = 0;
 	out[1] = 0;
@@ -60,20 +50,20 @@ void VehicleProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConst
 		/ POW2(POW2(pSys_[1]) + POW2(x[4]))*x[3] * (pSys_[1] - x[4])*(pSys_[1] + x[4])) / pSys_[0];
 }
 
-void VehicleProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = vec[3];
 	out[1] = vec[4];
 }
 
-void VehicleProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
 
-void VehicleProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void VehicleProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
-    ctypeRNum *udes = param->udes;
+    auto& xdes = param.xdes;
+    auto& udes = param.udes;
     out[0] = pCost_[10] * POW2(u[0] - udes[0])
 		+ pCost_[11] * POW2(u[1] - udes[1])
 		+ pCost_[0] * POW2(x[0] - xdes[0])
@@ -83,9 +73,9 @@ void VehicleProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef 
 		+ pCost_[4] * POW2(x[4] - xdes[4]);
 }
 
-void VehicleProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
     out[0] = 2 * pCost_[0] * (x[0] - xdes[0]);
 	out[1] = 2 * pCost_[1] * (x[1] - xdes[1]);
 	out[2] = 2 * pCost_[2] * (x[2] - xdes[2]);
@@ -93,16 +83,16 @@ void VehicleProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef 
 	out[4] = 2 * pCost_[4] * (x[4] - xdes[4]);
 }
 
-void VehicleProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *udes = param->udes;
+    auto& udes = param.udes;
     out[0] = 2 * pCost_[10] * (u[0] - udes[0]);
 	out[1] = 2 * pCost_[11] * (u[1] - udes[1]);
 }
 
-void VehicleProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void VehicleProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
     out[0] = pCost_[5] * POW2(x[0] - xdes[0])
 		+ pCost_[6] * POW2(x[1] - xdes[1])
 		+ pCost_[7] * POW2(x[2] - xdes[2])
@@ -110,9 +100,9 @@ void VehicleProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef 
 		+ pCost_[9] * POW2(x[4] - xdes[4]);
 }
 
-void VehicleProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
     out[0] = 2 * pCost_[5] * (x[0] - xdes[0]);
 	out[1] = 2 * pCost_[6] * (x[1] - xdes[1]);
 	out[2] = 2 * pCost_[7] * (x[2] - xdes[2]);
@@ -120,17 +110,17 @@ void VehicleProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef 
 	out[4] = 2 * pCost_[9] * (x[4] - xdes[4]);
 }
 
-void VehicleProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = 0;
 }
 
-void VehicleProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void VehicleProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
     out[0] = 4 - POW2(-20 + x[0]) - POW2(((typeRNum)-0.5) + x[1]);
 }
 
-void VehicleProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = -2 * vec[0] * (-20 + x[0]);
 	out[1] = -2 * vec[0] * (((typeRNum)-0.5) + x[1]);
@@ -139,12 +129,12 @@ void VehicleProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConst
 	out[4] = 0;
 }
 
-void VehicleProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
     out[0] = 0;
 	out[1] = 0;
 }
 
-void VehicleProblemDescription::dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void VehicleProblemDescription::dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }

@@ -25,23 +25,13 @@
 #define POW2(a) ((a)*(a))
 
 Crane2DProblemDescription::Crane2DProblemDescription(const std::vector<typeRNum>& pCost, const std::vector<typeRNum>& pCon)
-: pCost_(pCost),
+: ProblemDescription(6, 2, 0, 3, 0, 0, 0),
+  pCost_(pCost),
   pCon_(pCon)
 {
 }
 
-void Crane2DProblemDescription::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-{
-    *Nx = 6;
-	*Nu = 2;
-	*Np = 0;
-	*Nh = 3;
-	*Ng = 0;
-	*NgT = 0;
-	*NhT = 0;
-}
-
-void Crane2DProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
 	out[0] = x[1];
 	out[1] = u[0];
@@ -51,7 +41,7 @@ void Crane2DProblemDescription::ffct(VectorRef out, ctypeRNum t, VectorConstRef 
 	out[5] = -((9.81 * std::sin(x[4]) + std::cos(x[4])*u[0] + 2 * x[3] * x[5]) / x[2]);
 }
 
-void Crane2DProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 	ctypeRNum aux1 = std::sin(x[4]);
 	ctypeRNum aux2 = std::cos(x[4]);
@@ -64,20 +54,21 @@ void Crane2DProblemDescription::dfdx_vec(VectorRef out, ctypeRNum t, VectorConst
 	out[5] = vec[4] - (2 * x[3] * vec[5]) / x[2];
 }
 
-void Crane2DProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 	out[0] = vec[1] - ((std::cos(x[4]))*vec[5]) / x[2];
 	out[1] = vec[3];
 }
 
-void Crane2DProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }
 
-void Crane2DProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
-    ctypeRNum *udes = param->udes;
+    auto& xdes = param.xdes;
+    auto& udes = param.udes;
+
 	out[0] = pCost_[0] * POW2(x[0] - xdes[0]) +
 		pCost_[1] * POW2(x[1] - xdes[1]) +
 		pCost_[2] * POW2(x[2] - xdes[2]) +
@@ -88,9 +79,10 @@ void Crane2DProblemDescription::lfct(VectorRef out, ctypeRNum t, VectorConstRef 
 		pCost_[7] * POW2(u[1] - udes[1]);
 }
 
-void Crane2DProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *xdes = param->xdes;
+    auto& xdes = param.xdes;
+	
 	out[0] = 2 * pCost_[0] * (x[0] - xdes[0]);
 	out[1] = 2 * pCost_[1] * (x[1] - xdes[1]);
 	out[2] = 2 * pCost_[2] * (x[2] - xdes[2]);
@@ -99,33 +91,34 @@ void Crane2DProblemDescription::dldx(VectorRef out, ctypeRNum t, VectorConstRef 
 	out[5] = 2 * pCost_[5] * (x[5] - xdes[5]);
 }
 
-void Crane2DProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
-    ctypeRNum *udes = param->udes;
+    auto& udes = param.udes;
+
 	out[0] = 2 * pCost_[6] * (u[0] - udes[0]);
 	out[1] = 2 * pCost_[7] * (u[1] - udes[1]);
 }
 
-void Crane2DProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
 }
 
-void Crane2DProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
 }
 
-void Crane2DProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param)
 {
 }
 
-void Crane2DProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param)
 {
 	out[0] = std::cos(x[4]) * x[2] - pCon_[0] * POW2(x[0] + std::sin(x[4])*x[2]) - pCon_[1];
 	out[1] = x[5] - pCon_[2];
 	out[2] = -x[5] - pCon_[2];
 }
 
-void Crane2DProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 	ctypeRNum temp = pCon_[0] * (x[0] + std::sin(x[4])*x[2]);
 
@@ -137,11 +130,11 @@ void Crane2DProblemDescription::dhdx_vec(VectorRef out, ctypeRNum t, VectorConst
 	out[5] = 0 + vec[1] - vec[2];
 }
 
-void Crane2DProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 	out[0] = 0;
 }
 
-void Crane2DProblemDescription::dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param)
+void Crane2DProblemDescription::dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param)
 {
 }

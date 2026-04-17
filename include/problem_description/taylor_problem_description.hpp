@@ -20,80 +20,258 @@
 
 namespace grampc
 {
+    class TaylorBaseProblemDescription : public ProblemDescription
+    {
+    public:
+        virtual ~TaylorBaseProblemDescription() {}
+
+		using ProblemDescription::ProblemDescription;
+
+
+		/** System function f(t,x,u,p)
+		------------------------------------ **/
+		virtual void ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) = 0;
+
+		/** Jacobian df/dx multiplied by vector vec, i.e. (df/dx)^T*vec or vec^T*(df/dx) **/
+		virtual void dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param) = 0;
+
+		/** Jacobian df/du multiplied by vector vec, i.e. (df/du)^T*vec or vec^T*(df/du) **/
+		virtual void dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param) {}
+
+		/** Jacobian df/dp multiplied by vector vec, i.e. (df/dp)^T*vec or vec^T*(df/dp) **/
+		virtual void dfdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param) {}
+
+
+		/** Integral cost l(t,x(t),u(t),p)
+		-------------------------------------------------- **/
+		virtual void lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Gradient dl/dx **/
+		virtual void dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Gradient dl/du **/
+		virtual void dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Gradient dl/dp **/
+		virtual void dldp(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+
+		/** Terminal cost V(T,x,p) */
+		virtual void Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Gradient dV/dx **/
+		virtual void dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Gradient dV/dp **/
+		virtual void dVdp(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Gradient dV/dT **/
+		virtual void dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) {}
+
+
+		/** Inequality constraints h(t,x,u,p) < 0 
+        ----------------------------------------- **/
+		virtual void hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
+		virtual void dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+		/** Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dg/du) **/
+		virtual void dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+		/** Jacobian dh/dp multiplied by vector vec, i.e. (dh/dp)^T*vec or vec^T*(dg/dp) **/
+		virtual void dhdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+
+        /** Equality constraints g(t,x,u,p) = 0 
+         * ------------------------------------ */
+		virtual void gfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Jacobian dg/dx multiplied by vector vec, i.e. (dg/dx)^T*vec or vec^T*(dg/dx) **/
+		virtual void dgdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+		/** Jacobian dg/du multiplied by vector vec, i.e. (dg/du)^T*vec or vec^T*(dg/du) **/
+		virtual void dgdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+		/** Jacobian dg/dp multiplied by vector vec, i.e. (dg/dp)^T*vec or vec^T*(dg/dp) **/
+		virtual void dgdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+        /** Terminal equality constraints gT(T,x,p) = 0 
+         * -------------------------------------------- */
+		virtual void gTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Jacobian dgT/dx multiplied by vector vec, i.e. (dgT/dx)^T*vec or vec^T*(dgT/dx) **/
+		virtual void dgTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+		/** Jacobian dgT/dp multiplied by vector vec, i.e. (dgT/dp)^T*vec or vec^T*(dgT/dp) **/
+		virtual void dgTdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+		/** Jacobian dgT/dT multiplied by vector vec, i.e. (dgT/dT)^T*vec or vec^T*(dgT/dT) **/
+		virtual void dgTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+
+		/** Terminal inequality constraints hT(T,x,p) < 0 
+         * ---------------------------------------------- */
+		virtual void hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Jacobian dhT/dx multiplied by vector vec, i.e. (dhT/dx)^T*vec or vec^T*(dhT/dx) **/
+		virtual void dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+		/** Jacobian dhT/dp multiplied by vector vec, i.e. (dhT/dp)^T*vec or vec^T*(dhT/dp) **/
+		virtual void dhTdp_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+        
+		/** Jacobian dhT/dT multiplied by vector vec, i.e. (dhT/dT)^T*vec or vec^T*(dhT/dT) **/
+		virtual void dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) {}
+
+
+		/** Additional functions required for semi-implicit systems
+		M*dx/dt(t) = f(t0+t,x(t),u(t),p) using the solver RODAS
+		------------------------------------------------------- **/
+		/** Jacobian df/dx in vector form (column-wise) **/
+		virtual void dfdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Jacobian df/dx in vector form (column-wise) **/
+		virtual void dfdxtrans(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Jacobian df/dt **/
+		virtual void dfdt(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) {}
+
+		/** Jacobian d(dH/dx)/dt  **/
+		virtual void dHdxdt(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param) {}
+
+		/** Mass matrix in vector form (column-wise, either banded or full matrix) **/
+		virtual void Mfct(VectorRef out, const GrampcParam& param) {}
+
+		/** Transposed mass matrix in vector form (column-wise, either banded or full matrix) **/
+		virtual void Mtrans(VectorRef out, const GrampcParam& param) {}
+
+
+        /** Additional functions required for Taylor-SMPC */
+        /*------------------------------------------------*/
+
+        /** Jacobian df/dp in vector form  **/
+        virtual void dfdp(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+        /** Hessian d(df/dx)/dx in vector form  */
+        virtual void dfdxdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+        /** Jacobian d(df/dx)/dp in vector form  */
+        virtual void dfdxdp(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+        /** Hessian d(df/dx)/du in vector form  */
+        virtual void dfdxdu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+        /** Jacobian d(df/dp)/du in vector form  */
+        virtual void dfdpdu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+        /** Jacobian dh/dx in vector form  **/
+        virtual void dhdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+        /** Jacobian dh/du in vector form  **/
+        virtual void dhdu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+        /** Hessian d(dh/dx)/dx in vector form  **/
+        virtual void dhdxdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+        /** Jacobian d(dh/dx)/du in vector form **/
+        virtual void dhdxdu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p) {}
+
+		/** Jacobian dhT/dx in vector form  **/
+        virtual void dhTdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p) {}
+
+		/** Hessian d(dhT/dx)/dx in vector form  **/
+        virtual void dhTdxdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p) {}
+
+		/** Hessian d(dhT/dx)/dT in vector form  **/
+        virtual void dhTdxdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p) {}
+
+	public:
+		typeInt Nx_;
+		typeInt Np_;
+		typeInt Nu_;
+		typeInt Nh_;
+		typeInt NhT_;
+    };
+    
+    // Alias
+    typedef std::shared_ptr<TaylorBaseProblemDescription> TaylorBaseProblemDescriptionPtr;
+    typedef std::shared_ptr<const TaylorBaseProblemDescription> TaylorBaseProblemDescriptionConstPtr;
+
+
     // Interface to GRAMPC using a first order Taylor series approximation for uncertainty propagation
     class TaylorProblemDescription : public ProblemDescription
     {
     public:
         // Constructor specifying the type of constraint approximation
-        TaylorProblemDescription(ProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation);
+        TaylorProblemDescription(TaylorBaseProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation);
 
         // Constructor with zero-mean Wiener process and specified diffusion matrix
-        TaylorProblemDescription(ProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation, MatrixConstRef diffMatrixWienerProcess);
+        TaylorProblemDescription(TaylorBaseProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation, MatrixConstRef diffMatrixWienerProcess);
 
         // Constructor for problems without constraints
-        TaylorProblemDescription(ProblemDescriptionPtr problemDescription);
+        TaylorProblemDescription(TaylorBaseProblemDescriptionPtr problemDescription);
 
         // Constructor with zero-mean Wiener process and specified diffusion matrix
-        TaylorProblemDescription(ProblemDescriptionPtr problemDescription, MatrixConstRef diffMatrixWienerProcess);
+        TaylorProblemDescription(TaylorBaseProblemDescriptionPtr problemDescription, MatrixConstRef diffMatrixWienerProcess);
         
         /** OCP dimensions: states (Nx), controls (Nu), parameters (Np), equalities (Ng), 
 			inequalities (Nh), terminal equalities (NgT), terminal inequalities (NhT) **/
-        virtual void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT) override;
+        // virtual void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT) override;
 
 
         /** System function f(t,x,u,p,userparam)
 		------------------------------------ **/
-        virtual void ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param) override;
+        virtual void ffct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) override;
         
         // Jacobian df/dx multiplied by vector vec, i.e. (df/dx)^T*vec or vec^T*(df/dx)
-        virtual void dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param) override;
+        virtual void dfdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param) override;
         
         // Jacobian df/du multiplied by vector vec, i.e. (df/du)^T*vec or vec^T*(df/du)
-        virtual void dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const typeGRAMPCparam *param) override;
+        virtual void dfdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef adj, const GrampcParam& param) override;
 
 
         /** Integral cost l(t,x(t),u(t),p,xdes,udes,userparam)
 		-------------------------------------------------- **/
-        virtual void lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param) override;
+        virtual void lfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) override;
         
         // Gradient dl/dx
-        virtual void dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param) override;
+        virtual void dldx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) override;
         
         // Gradient dl/du
-        virtual void dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param) override;
+        virtual void dldu(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) override;
 
 
         /** Terminal cost V(T,x,p)
 		-------------------------------------------------- **/
-        virtual void Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param) override;
+        virtual void Vfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) override;
         
         // Gradient dV/dx
-        virtual void dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param) override;
+        virtual void dVdx(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) override;
 
         /** Gradient dV/dT **/
-		virtual void dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param) override;
+		virtual void dVdT(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) override;
 
 
         /** Inequality constraints h(t,x,u,p) < 0
 		-------------------------------------------------- **/
-        virtual void hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const typeGRAMPCparam *param) override;
+        virtual void hfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, const GrampcParam& param) override;
         
         //  Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dh/dx)
-        virtual void dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param) override;
+        virtual void dhdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) override;
 
         // Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dh/du)
-        virtual void dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param) override;
+        virtual void dhdu_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef u, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) override;
 
 
         /** Terminal inequality constraints hT(T,x,p) < 0 
          * ------------------------------------------------ **/
-        virtual void hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const typeGRAMPCparam *param) override;
+        virtual void hTfct(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, const GrampcParam& param) override;
 
 		/** Jacobian dhT/dx multiplied by vector vec, i.e. (dhT/dx)^T*vec or vec^T*(dhT/dx) **/
-		virtual void dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param) override;
+		virtual void dhTdx_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) override;
         
 		/** Jacobian dhT/dT multiplied by vector vec, i.e. (dhT/dT)^T*vec or vec^T*(dhT/dT) **/
-		virtual void dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const typeGRAMPCparam *param) override;
+		virtual void dhTdT_vec(VectorRef out, ctypeRNum t, VectorConstRef x, VectorConstRef p, VectorConstRef vec, const GrampcParam& param) override;
 
 
         // Compute the point-based representation of the initial states and the parameters
@@ -103,10 +281,10 @@ namespace grampc
         void compute_x0_and_p0(DistributionPtr state);
 
         // Return initial state
-        ctypeRNum* x0();
+        const Vector x0();
 
         // Return parameters
-        ctypeRNum* p0();
+        const Vector p0();
 
     private:  
         typeInt numStates_;
@@ -115,11 +293,11 @@ namespace grampc
         typeInt numConstraints_;
         typeInt numTerminalConstraints_;
         
-        ProblemDescriptionPtr problemDescription_;
+        TaylorBaseProblemDescriptionPtr problemDescription_;
         Vector constraintTighteningCoeff_;
         Matrix diffMatrixWienerProcess_;
-        Matrix x0_;
-        Matrix p0_;
+        Vector x0_;
+        Vector p0_;
         Matrix dfdx_;
         Matrix dfdp_;
         Matrix dfdxdx_;
@@ -149,13 +327,13 @@ namespace grampc
 	typedef std::shared_ptr<TaylorProblemDescription> TaylorProblemDescriptionPtr;
 	
     // Constructor specifying the type of constraint approximation
-    TaylorProblemDescriptionPtr TaylorProblem(ProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation);
+    TaylorProblemDescriptionPtr TaylorProblem(TaylorBaseProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation);
     // Constructor with zero-mean Wiener process and specified diffusion matrix
-    TaylorProblemDescriptionPtr TaylorProblem(ProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation, MatrixConstRef diffMatrixWienerProcess);
+    TaylorProblemDescriptionPtr TaylorProblem(TaylorBaseProblemDescriptionPtr problemDescription, ChanceConstraintApproximationConstPtr constraintApproximation, MatrixConstRef diffMatrixWienerProcess);
     // Constructor for problems without constraints
-    TaylorProblemDescriptionPtr TaylorProblem(ProblemDescriptionPtr problemDescription);
+    TaylorProblemDescriptionPtr TaylorProblem(TaylorBaseProblemDescriptionPtr problemDescription);
     // Constructor with zero-mean Wiener process and specified diffusion matrix
-    TaylorProblemDescriptionPtr TaylorProblem(ProblemDescriptionPtr problemDescription, MatrixConstRef diffMatrixWienerProcess);
+    TaylorProblemDescriptionPtr TaylorProblem(TaylorBaseProblemDescriptionPtr problemDescription, MatrixConstRef diffMatrixWienerProcess);
 }
 
 #endif // TAYLOR_PROBLEM_DESCRIPTION_HPP

@@ -60,10 +60,12 @@ int main()
 
     // create nominal problem description
     ProblemDescriptionPtr mspProblem = ProblemDescriptionPtr(new MassSpringDamperProblemDescription(numberOfMasses, pSys, pCost));
+    // TaylorBase is needed when using the TaylorProblem
+    // TaylorBaseProblemDescriptionPtr mspProblemTaylor = TaylorBaseProblemDescriptionPtr(new MassSpringDamperProblemDescription(numberOfMasses, pSys, pCost));
 
     // configure stochastic problem description
     SigmaPointProblemDescriptionPtr problem = SigmaPointProblem(mspProblem, transform);
-    // TaylorProblemDescriptionPtr problem = TaylorProblem(mspProblem, covProcessNoise);
+    // TaylorProblemDescriptionPtr problem = TaylorProblem(mspProblemTaylor, covProcessNoise);
     // ResamplingProblemDescriptionPtr problem = ResamplingProblem(mspProblem, transform, covProcessNoise);
 
     // create solver

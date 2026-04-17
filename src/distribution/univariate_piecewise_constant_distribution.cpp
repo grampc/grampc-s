@@ -15,8 +15,8 @@
 namespace grampc
 {
     UnivariatePiecewiseConstantDistribution::UnivariatePiecewiseConstantDistribution(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity)
-        : Distribution(Vector::Constant(1, 1, mean(intervalLimits, intervalProbabilityDensity)), 
-                       Matrix::Constant(1, 1, variance(intervalLimits, intervalProbabilityDensity)),
+        : Distribution(Vector::Constant(1, 1, meanImpl(intervalLimits, intervalProbabilityDensity)), 
+                       Matrix::Constant(1, 1, varianceImpl(intervalLimits, intervalProbabilityDensity)),
                        {PolynomialFamily::NONE}),
           intervalLimits_(intervalLimits),
           intervalProbabilityDensity_(intervalProbabilityDensity),
@@ -40,7 +40,7 @@ namespace grampc
         return sample_;
     }
 
-    typeRNum UnivariatePiecewiseConstantDistribution::mean(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity)
+    typeRNum UnivariatePiecewiseConstantDistribution::meanImpl(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity)
     {
         typeRNum out = 0.0;
         typeInt numIntervals = (typeInt) intervalProbabilityDensity.size();
@@ -53,7 +53,7 @@ namespace grampc
         return out;
     }
 
-    typeRNum UnivariatePiecewiseConstantDistribution::variance(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity)
+    typeRNum UnivariatePiecewiseConstantDistribution::varianceImpl(const std::vector<typeRNum>& intervalLimits, const std::vector<typeRNum>& intervalProbabilityDensity)
     {
         /************************************************************************************************************************************************
         * Compute the variance of the distribution as Var{X} = E{X^2} - E{X}^2 
@@ -88,7 +88,7 @@ namespace grampc
         }
 
         // Compute Variance of the piecewise constant distribution Var{X} = E{X^2} - E{X}^2
-        typeRNum m = this->mean(intervalLimits, intervalProbabilityDensity);
+        typeRNum m = this->meanImpl(intervalLimits, intervalProbabilityDensity);
         return secondMomentTotal - m * m;
     }
 

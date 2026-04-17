@@ -78,7 +78,7 @@ int main()
 
     // create solver
     GrampcPtr solver = Solver(problem);
-    const typeGRAMPCparam *par = solver->getParameters();
+    const GrampcParam par(solver->getParameters());
 
     // set initial states and parameters depending on the propagation method
     problem->compute_x0_and_p0(state, param);
@@ -86,8 +86,8 @@ int main()
     solver->setparam_real_vector("p0", problem->p0());
 
     // resize vectors
-    xdes.resize(par->Nx, 0.0);
-    constraintsAbsTol.resize(par->Nc, 0.0);
+    xdes.resize(*par.Nx, 0.0);
+    constraintsAbsTol.resize(*par.Nc, 0.0);
 
     // set parameters
     solver->setparam_real("Thor", Thor);

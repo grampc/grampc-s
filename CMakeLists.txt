@@ -15,6 +15,8 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -23,17 +25,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 cmake_policy(SET CMP0015 NEW)
 
 # Eigen 3.4.90 is required
-find_package(Eigen3 3.4.90 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(grampc)
 
 include_directories(
 	include
-	libs/grampc/include
 )
 
 # Add library and link Eigen
 add_library(grampc-s)
-target_link_libraries(grampc-s Eigen3::Eigen)
-
-add_subdirectory(examples)
-add_subdirectory(libs)
+target_link_libraries(grampc-s Eigen3::Eigen grampc)
 add_subdirectory(src)
+
+if(PYTHON)
+	add_subdirectory(python)
+else()
+	add_subdirectory(examples)
+endif()
