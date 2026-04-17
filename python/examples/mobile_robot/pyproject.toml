@@ -1,0 +1,15 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "grampc_s_mobile_robot"
+version = "1.0.0"
+
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pygrampc",
+    "grampc_s"
+]
