@@ -109,8 +109,8 @@ namespace grampc
         ProblemDescriptionPtr problemDescription_;
         PointTransformationPtr pointTransformation_;
         MultiDistributionPtr stateAndParam_;
-        Matrix x0_;
-        Matrix p0_;
+        Vector x0_;
+        Vector p0_;
         RowVector dmean_dPoints_;
         Vector tempScalar_;
 

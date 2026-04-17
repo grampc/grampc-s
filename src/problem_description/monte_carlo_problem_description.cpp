@@ -40,8 +40,8 @@ namespace grampc
         stateAndParam_ = MultiDist({Dist(numStates_), Dist(numParams_)});
 
         // allocate memory
-        x0_ = Matrix::Zero(numStates_, numSigmaPoints_);
-        p0_ = Matrix::Zero(numParams_, numSigmaPoints_);
+        x0_ = Vector::Zero(numStates_ * numSigmaPoints_);
+        p0_ = Vector::Zero(numParams_ * numSigmaPoints_);
         temp_vec_numInputs_ = Vector::Zero(numControlInputs_);
         temp_vec_numSigmaPoints_ = RowVector::Zero(numSigmaPoints_);
         dmean_dPoints_ = pointTransformation_->dmean1D_dpoints().transpose();
@@ -218,8 +218,10 @@ namespace grampc
 
         // Compute state and parameter points and copy them to matrices of the correct size
         const Matrix& points = pointTransformation_->points(stateAndParam_);
-        x0_ = points.topRows(numStates_);
-        p0_ = points.bottomRows(numParams_);
+        x0_ = points.topRows(numStates_).reshaped(numStates_ * numSigmaPoints_, 1);
+        p0_ = points.bottomRows(numParams_).reshaped(numParams_ * numSigmaPoints_, 1);
+        // x0_ = points.topRows(numStates_);
+        // p0_ = points.bottomRows(numParams_);
     }
 
     void MonteCarloProblemDescription::compute_x0_and_p0(DistributionPtr state)
@@ -229,8 +231,10 @@ namespace grampc
 
         // Compute state and parameter points and copy them to matrices of the correct size
         const Matrix& points = pointTransformation_->points(stateAndParam_);
-        x0_ = points.topRows(numStates_);
-        p0_ = points.bottomRows(numParams_);
+        x0_ = points.topRows(numStates_).reshaped(numStates_ * numSigmaPoints_, 1);
+        p0_ = points.bottomRows(numParams_).reshaped(numParams_ * numSigmaPoints_, 1);
+        // x0_ = points.topRows(numStates_);
+        // p0_ = points.bottomRows(numParams_);
     }
 
     const Vector MonteCarloProblemDescription::x0()

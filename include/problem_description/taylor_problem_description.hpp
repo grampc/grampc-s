@@ -296,8 +296,8 @@ namespace grampc
         TaylorBaseProblemDescriptionPtr problemDescription_;
         Vector constraintTighteningCoeff_;
         Matrix diffMatrixWienerProcess_;
-        Matrix x0_;
-        Matrix p0_;
+        Vector x0_;
+        Vector p0_;
         Matrix dfdx_;
         Matrix dfdp_;
         Matrix dfdxdx_;

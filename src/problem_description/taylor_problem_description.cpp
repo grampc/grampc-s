@@ -35,8 +35,8 @@ namespace grampc
         numTerminalConstraints_ = problemDescription_->NhT;
 
         // allocate memory
-        x0_ = Matrix::Zero(numStates_, 1 + numStates_ + numParams_);
-        p0_ = Matrix::Zero(numParams_, 1 + numParams_);
+        x0_ = Vector::Zero(numStates_ + numStates_ * numStates_ + numStates_ * numParams_);
+        p0_ = Vector::Zero(numParams_ + numParams_ * numParams_);
         dfdx_ = Matrix::Zero(numStates_, numStates_);
         dfdp_ = Matrix::Zero(numStates_, numParams_);
         dfdxdx_ = Matrix::Zero(numStates_, numStates_ * numStates_);
@@ -396,19 +396,40 @@ namespace grampc
 
     void TaylorProblemDescription::compute_x0_and_p0(DistributionPtr state, DistributionPtr param)
     {
-        x0_.col(0) = state->mean();
-        x0_(Eigen::all, Eigen::seqN(1, numStates_)) = state->covariance();
-        x0_(Eigen::all, Eigen::seqN(1+numStates_, numParams_)).setZero();
+        const Matrix& covariance_state = state->covariance();
+        const Matrix& covariance_param = param->covariance();
 
-        p0_.col(0) = param->mean();
-        p0_(Eigen::all, Eigen::seqN(1, numParams_)) = param->covariance();
+        // initial state
+        x0_.segment(0, numStates_) = state->mean();
+        for(typeInt i = 0; i < numStates_; ++i)
+        {
+            x0_.segment(numStates_ + i  * numStates_, numStates_) = covariance_state.col(i);
+
+            // is this really needed?
+            x0_.segment(numStates_ + numStates_ * numStates_ + i * numParams_, numParams_).setZero();
+        }
+
+        // initial parameter
+        p0_.segment(0, numParams_) = param->mean();
+        for(typeInt i = 0; i < numParams_; ++i)
+        {
+            p0_.segment(numParams_ + i  * numParams_, numParams_) = covariance_param.col(i);
+        }
     }
 
     void TaylorProblemDescription::compute_x0_and_p0(DistributionPtr state)
     {
-        x0_.col(0) = state->mean();
-        x0_(Eigen::all, Eigen::seqN(1, numStates_)) = state->covariance();
-        x0_(Eigen::all, Eigen::seqN(1+numStates_, numParams_)).setZero();
+        const Matrix& covariance = state->covariance();
+
+        // initial state
+        x0_.segment(0, numStates_) = state->mean();
+        for(typeInt i = 0; i < numStates_; ++i)
+        {
+            x0_.segment(numStates_ + i  * numStates_, numStates_) = covariance.col(i);
+            
+            // is this really needed?
+            x0_.segment(numStates_ + numStates_ * numStates_ + i * numParams_, numParams_).setZero();
+        }
     }
 
     const Vector TaylorProblemDescription::x0()

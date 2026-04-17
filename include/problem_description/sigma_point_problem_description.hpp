@@ -115,8 +115,8 @@ namespace grampc
         PointTransformationPtr pointTransformation_;
         MultiDistributionPtr stateAndParam_;
         Vector constraintTighteningCoeff_;
-        Matrix x0_;
-        Matrix p0_;
+        Vector x0_;
+        Vector p0_;
         Matrix constraintMatrix_;
         Vector constraintStdDev_;
         RowVector dmean_dPoints_;
