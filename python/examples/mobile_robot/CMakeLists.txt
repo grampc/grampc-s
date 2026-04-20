@@ -9,6 +9,11 @@
 cmake_minimum_required(VERSION 3.15)
 project(grampc_s_mobile_robot LANGUAGES CXX)
 
+if(WIN32)
+    # this define enables constants like M_PI
+    add_compile_definitions(_USE_MATH_DEFINES)
+endif()
+
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Eigen3 3.4 REQUIRED CONFIG)

@@ -64,11 +64,11 @@ if __name__ == "__main__":
     Tsim = 4.5
     vec = GrampcResults(grampc, Tsim)
 
-    vec.mean = np.nan * np.zeros((len(vec.t), Nx))
-    vec.std  = np.nan * np.zeros((len(vec.t), Nx))
-    pred_mean = np.nan * np.zeros((grampc.opt.Nhor, Nx))
-    pred_std = np.nan * np.zeros((grampc.opt.Nhor, Nx))
-    points = np.nan * np.zeros((grampc.opt.Nhor, Nx * point_transformation.number_of_points()))
+    vec.mean = np.full((len(vec.t), Nx), np.nan)
+    vec.std  = np.full((len(vec.t), Nx), np.nan)
+    pred_mean = np.full((grampc.opt.Nhor, Nx), np.nan)
+    pred_std = np.full((grampc.opt.Nhor, Nx), np.nan)
+    points = np.full((grampc.opt.Nhor, Nx * point_transformation.number_of_points()), np.nan)
     zalpha = chance_constraint.z[0] # assuming all constraints have same threshold
 
     # prepare plots (interactive mode)

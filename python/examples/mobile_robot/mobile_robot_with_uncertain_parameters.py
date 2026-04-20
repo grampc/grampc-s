@@ -50,7 +50,9 @@ if __name__ == "__main__":
     initial_state = GaussianDistribution(np.array([0, 0, 0]), np.zeros((Nx, Nx)))
     # distribution of parameters
     parameter_distribution = MultivariateDistribution([
-        UnivariateUniformDistribution(0.5, 2), UnivariateUniformDistribution(0.5, 2) ])
+        UnivariateUniformDistribution(0.5, 2),
+        UnivariateUniformDistribution(0.5, 2)
+    ])
     # compute initial state of approximation
     stochastic_problem.compute_x0_and_p0(initial_state, parameter_distribution)
     grampc.set_param({'x0': stochastic_problem.x0, 'p0': stochastic_problem.p0})
@@ -64,10 +66,10 @@ if __name__ == "__main__":
     Tsim = 4.5
     vec = GrampcResults(grampc, Tsim)
 
-    vec.mean = np.nan * np.zeros((len(vec.t), Nx))
-    vec.std  = np.nan * np.zeros((len(vec.t), Nx))
-    pred_mean = np.nan * np.zeros((grampc.opt.Nhor, Nx))
-    pred_std = np.nan * np.zeros((grampc.opt.Nhor, Nx))
+    vec.mean = np.full((len(vec.t), Nx), np.nan)
+    vec.std  = np.full((len(vec.t), Nx), np.nan)
+    pred_mean = np.full((grampc.opt.Nhor, Nx), np.nan)
+    pred_std = np.full((grampc.opt.Nhor, Nx), np.nan)
     zalpha = chance_constraint.z[0] # assuming all constraints have same threshold
 
     # prepare plots (interactive mode)
